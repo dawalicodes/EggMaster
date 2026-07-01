@@ -21,7 +21,7 @@ Open your terminal, navigate to the `cloudflare-backend` directory, install its 
 
 ```bash
 cd cloudflare-backend
-npm install
+npm install --legacy-peer-deps
 
 # 1. Initialize your local D1 SQLite database from the schema file
 npx wrangler d1 execute eggmaster_pro_db --local --file=./schema.sql
@@ -37,10 +37,13 @@ Open a separate terminal window, navigate back to the root of your project, inst
 ```bash
 # Return to root directory
 cd ..
-npm install
+npm install --legacy-peer-deps
 npm run dev -- --port 3000
 ```
 * This runs your frontend on **`http://localhost:3000`**.
+
+> **⚠️ Note on Local Installation (ERESOLVE errors)**:
+> If you encounter `ERESOLVE unable to resolve dependency tree` error due to Tailwind v4 and Vite v6 peer configurations on your local node environment, always append the `--legacy-peer-deps` flag (`npm install --legacy-peer-deps`). This safely bypasses strict peer-dependency checks while keeping your packages functioning beautifully.
 
 > **💡 Smart Proxy Configuration**: 
 > To test the API calls seamless offline, you can add a proxy to your local `vite.config.ts` so that all requests to `/api/*` are automatically forwarded to your Wrangler worker on port `8787`. Add this `proxy` block to your `server` configuration in `vite.config.ts`:
