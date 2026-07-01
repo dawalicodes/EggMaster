@@ -1,0 +1,19 @@
+{
+  "name": "eggmaster-pro-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker Backend for EggMaster Pro",
+  "main": "src/index.ts",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.101.0"
+  }
+}

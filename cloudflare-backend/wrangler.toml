@@ -1,0 +1,9 @@
+name = "eggmaster-pro-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Bind your serverless D1 SQLite relational database
+[[d1_databases]]
+binding = "DB"
+database_name = "eggmaster_pro_db"
+database_id = "YOUR_D1_DATABASE_ID_HERE" # Put your generated D1 database ID here, or wrangler will guide you to create one!
