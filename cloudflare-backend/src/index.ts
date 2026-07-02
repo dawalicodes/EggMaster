@@ -117,21 +117,33 @@ const INITIAL_VACCINATION_LOGS = [
 
 // Helper to seed database if empty
 async function seedDatabaseIfEmpty(db: D1Database): Promise<void> {
+  let needSeed = false;
   try {
     const usersCheck = await db.prepare("SELECT count(*) as count FROM users").first<{ count: number }>();
-    if (usersCheck && usersCheck.count > 0) {
-      return; // Already seeded
+    if (!usersCheck || usersCheck.count === 0) {
+      needSeed = true;
     }
   } catch (error: any) {
-    console.error("D1 DATABASE INITIALIZATION CHECK FAILED:", error);
-    if (error.message && (error.message.includes("no such table") || error.message.includes("does not exist"))) {
-      throw new Error(
-        "EggMaster Pro DB Error: The 'users' table does not exist in your D1 database. " +
-        "You must run your schema.sql migrations to set up the tables! " +
-        "Please run: npx wrangler d1 execute eggmaster_pro_db --remote --file=./schema.sql"
-      );
-    }
-    throw error;
+    console.log("Tables don't exist. Creating database tables dynamically...");
+    const createStatements = [
+      db.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, name TEXT NOT NULL, contact TEXT)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS customers (id TEXT PRIMARY KEY, name TEXT NOT NULL, contact TEXT)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, name TEXT NOT NULL, initialCount INTEGER NOT NULL, currentCount INTEGER NOT NULL, dateAcquired TEXT NOT NULL, sourceSupplierId TEXT, ageWeeksAtAcquisition INTEGER NOT NULL, status TEXT NOT NULL, FOREIGN KEY (sourceSupplierId) REFERENCES suppliers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS dailyRecords (id TEXT PRIMARY KEY, date TEXT NOT NULL, batchId TEXT NOT NULL, eggsCollected INTEGER NOT NULL, eggsBroken INTEGER NOT NULL, eggsSpoilt INTEGER NOT NULL, mortalityCount INTEGER NOT NULL, mortalityCause TEXT, feedConsumedBags REAL NOT NULL, notes TEXT, createdBy TEXT, FOREIGN KEY (batchId) REFERENCES batches(id), FOREIGN KEY (createdBy) REFERENCES users(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS feedStock (id TEXT PRIMARY KEY, name TEXT NOT NULL, quantityBags REAL NOT NULL, unitCost REAL NOT NULL, lowStockThreshold REAL NOT NULL, supplierId TEXT, FOREIGN KEY (supplierId) REFERENCES suppliers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS inventoryItems (id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL, unitCost REAL NOT NULL, lowStockThreshold REAL NOT NULL)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS expenses (id TEXT PRIMARY KEY, category TEXT NOT NULL, amount REAL NOT NULL, date TEXT NOT NULL, notes TEXT, batchId TEXT, FOREIGN KEY (batchId) REFERENCES batches(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS income (id TEXT PRIMARY KEY, source TEXT NOT NULL, quantity REAL NOT NULL, unitPrice REAL NOT NULL, totalAmount REAL NOT NULL, date TEXT NOT NULL, customerId TEXT, paymentStatus TEXT NOT NULL, amountPaid REAL NOT NULL, FOREIGN KEY (customerId) REFERENCES customers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS creditPayments (id TEXT PRIMARY KEY, incomeId TEXT NOT NULL, amountPaid REAL NOT NULL, date TEXT NOT NULL, notes TEXT, FOREIGN KEY (incomeId) REFERENCES income(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS vaccinationLogs (id TEXT PRIMARY KEY, batchId TEXT NOT NULL, vaccineOrDrugName TEXT NOT NULL, dateAdministered TEXT NOT NULL, nextDueDate TEXT, dosage TEXT, notes TEXT, FOREIGN KEY (batchId) REFERENCES batches(id))")
+    ];
+    await db.batch(createStatements);
+    needSeed = true;
+  }
+
+  if (!needSeed) {
+    return;
   }
 
   // Seed everything transactionally via batching
