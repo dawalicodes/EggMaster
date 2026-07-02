@@ -5,13 +5,15 @@
 
 import { FarmBackupPayload, User } from '../types';
 
+export const API_BASE = ((import.meta as any).env?.VITE_API_URL as string) || '';
+
 const STORAGE_KEY = 'poultry_farm_data';
 const PENDING_SYNC_KEY = 'poultry_pending_sync';
 
 // Check if we are online or can reach the API
 export async function testConnection(): Promise<boolean> {
   try {
-    const res = await fetch('/api/data', { method: 'HEAD', cache: 'no-cache' });
+    const res = await fetch(`${API_BASE}/api/data`, { method: 'HEAD', cache: 'no-cache' });
     return res.ok;
   } catch (error) {
     return false;
@@ -21,7 +23,7 @@ export async function testConnection(): Promise<boolean> {
 // Fetch database records with offline fallback
 export async function getFarmData(): Promise<{ data: FarmBackupPayload; isOffline: boolean }> {
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch(`${API_BASE}/api/data`);
     if (!res.ok) {
       throw new Error('API server returned error status');
     }
@@ -53,7 +55,7 @@ export async function syncFarmData(
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
   try {
-    const response = await fetch('/api/sync', {
+    const response = await fetch(`${API_BASE}/api/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data, user })
@@ -84,7 +86,7 @@ export async function syncFarmData(
 // Manual database reset
 export async function resetServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
   try {
-    const res = await fetch('/api/reset', { method: 'POST' });
+    const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
     const result = await res.json();
     if (res.ok && result.status === 'success') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
@@ -102,7 +104,7 @@ export async function resetServerDatabase(): Promise<{ success: boolean; data: F
 // Wipe database completely
 export async function wipeServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
   try {
-    const res = await fetch('/api/wipe', { method: 'POST' });
+    const res = await fetch(`${API_BASE}/api/wipe`, { method: 'POST' });
     const result = await res.json();
     if (res.ok && result.status === 'success') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));

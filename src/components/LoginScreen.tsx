@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Loader } from 'lucide-react';
 import { User } from '../types';
+import { API_BASE } from '../utils/api';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -28,7 +29,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setErrorMsg('');
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })

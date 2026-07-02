@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Key, Plus, Trash, Edit, Shield, ShieldAlert, CheckCircle, UserPlus, Users, Lock } from 'lucide-react';
 import { User as UserType } from '../types';
+import { API_BASE } from '../utils/api';
 
 interface ProfileManagerProps {
   currentUser: UserType;
@@ -42,7 +43,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
   // Fetch all users
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch(`${API_BASE}/api/users`);
       if (response.ok) {
         const data = await response.json();
         setUsersList(data);
@@ -77,7 +78,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
         payload.password = currPassword;
       }
 
-      const response = await fetch(`/api/users/${currentUser.id}`, {
+      const response = await fetch(`${API_BASE}/api/users/${currentUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -113,7 +114,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
     setSuccessMsg('');
 
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch(`${API_BASE}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +166,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
         payload.password = editPassword;
       }
 
-      const response = await fetch(`/api/users/${editingUserId}`, {
+      const response = await fetch(`${API_BASE}/api/users/${editingUserId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -196,7 +197,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
     setSuccessMsg('');
 
     try {
-      const response = await fetch(`/api/users/${id}`, {
+      const response = await fetch(`${API_BASE}/api/users/${id}`, {
         method: 'DELETE'
       });
 
