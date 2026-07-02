@@ -43,6 +43,7 @@ import {
   resetServerDatabase,
   wipeServerDatabase,
   IS_USING_WORKER,
+  IS_PRODUCTION_PAGES,
   API_BASE
 } from './utils/api';
 
@@ -136,16 +137,16 @@ export default function App() {
     try {
       const res = await syncFarmData(updatedPayload, currentUser);
       setSyncStatusMsg({ success: res.success, text: res.message });
+      if (res.success) {
+        setTimeout(() => {
+          setSyncStatusMsg({ success: true, text: 'Cloud Synchronised' });
+        }, 3000);
+      }
     } catch (err: any) {
       setSyncStatusMsg({ success: false, text: err.message || 'Failed to sync changes with server.' });
     } finally {
       setSyncDelaying(false);
     }
-
-    // Clear alert after a brief flash
-    setTimeout(() => {
-      setSyncStatusMsg({ success: true, text: 'Cloud Synchronised' });
-    }, 3000);
   };
 
   // --- MUTATION ACTORS ---
@@ -698,13 +699,13 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             {/* Sync connection details */}
-            <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold" title={IS_USING_WORKER ? `Connected to worker at ${API_BASE}` : "Using local Express sandbox because VITE_API_URL is empty"}>
-              <span className={`h-2 w-2 rounded-full shrink-0 ${IS_USING_WORKER ? 'bg-emerald-500' : 'bg-blue-500'} animate-pulse`} />
+            <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold" title={IS_USING_WORKER ? `Connected to worker at ${API_BASE}` : IS_PRODUCTION_PAGES ? "No cloud database connected! Setting VITE_API_URL required in Pages settings." : "Using local Express sandbox because VITE_API_URL is empty"}>
+              <span className={`h-2 w-2 rounded-full shrink-0 ${IS_USING_WORKER ? 'bg-emerald-500' : IS_PRODUCTION_PAGES ? 'bg-rose-500' : 'bg-blue-500'} animate-pulse`} />
               <span className="text-slate-600 font-mono hidden sm:inline">
-                {IS_USING_WORKER ? 'Cloud Worker Active' : 'Sandbox Mode'}
+                {IS_USING_WORKER ? 'Cloud Worker Active' : IS_PRODUCTION_PAGES ? 'Database Disconnected' : 'Sandbox Mode'}
               </span>
               <span className="text-slate-600 font-mono sm:hidden">
-                {IS_USING_WORKER ? 'Worker Active' : 'Sandbox'}
+                {IS_USING_WORKER ? 'Worker Active' : IS_PRODUCTION_PAGES ? 'No DB Connected' : 'Sandbox'}
               </span>
               {syncDelaying && <RefreshCw className="w-3 h-3 animate-spin text-emerald-600 shrink-0" />}
             </div>
@@ -816,6 +817,26 @@ export default function App() {
             </div>
           ) : (
             <div className="space-y-6">
+              {!syncStatusMsg.success && (
+                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 sm:p-5 text-xs text-rose-700 leading-relaxed shadow-3xs flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="p-2.5 bg-rose-100 text-rose-700 rounded-xl shrink-0">
+                    <AlertCircle className="w-5 h-5 text-rose-600 animate-pulse" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-bold text-rose-900 text-sm">Database Synchronization Error</h4>
+                    <p className="text-rose-700 font-medium">
+                      {syncStatusMsg.text}
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Make sure your Cloudflare Worker is deployed with wrangler and connected to your D1 database, and that the <strong>VITE_API_URL</strong> environment variable matches your worker's live URL.
+                    </p>
+                  </div>
+                  <button onClick={() => setSyncStatusMsg({ success: true, text: 'System ready.' })} className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg text-[10px] font-bold transition-all shrink-0 cursor-pointer">
+                    Dismiss Error
+                  </button>
+                </div>
+              )}
+
               {!IS_USING_WORKER && (
                 <div className="bg-blue-50/80 border border-blue-150 rounded-2xl p-4 sm:p-5 text-xs text-slate-700 leading-relaxed shadow-3xs flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl shrink-0">

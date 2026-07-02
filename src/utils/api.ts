@@ -7,12 +7,13 @@ import { FarmBackupPayload, User } from '../types';
 
 export const API_BASE = ((import.meta as any).env?.VITE_API_URL as string) || '';
 export const IS_USING_WORKER = !!((import.meta as any).env?.VITE_API_URL as string);
+export const IS_PRODUCTION_PAGES = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
 
 // Fetch database records from cloud
 export async function getFarmData(): Promise<{ data: FarmBackupPayload }> {
   const res = await fetch(`${API_BASE}/api/data`);
   if (!res.ok) {
-    throw new Error('API server returned error status');
+    throw new Error(`API server returned error status: ${res.status}`);
   }
   const data = await res.json() as FarmBackupPayload;
   return { data };
@@ -30,7 +31,7 @@ export async function syncFarmData(
   });
 
   if (!response.ok) {
-    throw new Error('Network response was not ok during synchronization.');
+    throw new Error(`Network response was not ok during synchronization (status: ${response.status}).`);
   }
 
   const result = await response.json();
@@ -48,7 +49,7 @@ export async function syncFarmData(
 export async function resetServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
   const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
   if (!res.ok) {
-    throw new Error('Reset request failed on server');
+    throw new Error(`Reset request failed on server (status: ${res.status})`);
   }
   const result = await res.json();
   if (result.status === 'success') {
@@ -59,13 +60,26 @@ export async function resetServerDatabase(): Promise<{ success: boolean; data: F
 
 // Wipe database completely
 export async function wipeServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
+  const emptyData = {
+    batches: [],
+    dailyRecords: [],
+    feedStock: [],
+    inventoryItems: [],
+    expenses: [],
+    income: [],
+    customers: [],
+    suppliers: [],
+    creditPayments: [],
+    vaccinationLogs: []
+  };
+
   const res = await fetch(`${API_BASE}/api/wipe`, { method: 'POST' });
   if (!res.ok) {
-    throw new Error('Wipe request failed on server');
+    throw new Error(`Wipe request failed on server (status: ${res.status})`);
   }
   const result = await res.json();
   if (result.status === 'success') {
-    return { success: true, data: result.data };
+    return { success: true, data: result.data || emptyData };
   }
   throw new Error(result.message || 'Wipe failed');
 }
