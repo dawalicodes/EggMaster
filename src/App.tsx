@@ -349,7 +349,7 @@ export default function App() {
       id: `exp_${Date.now()}`,
       category: 'feed',
       amount: totalCost,
-      date: new Date('2026-05-29').toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0],
       notes: `Restocked ${addedBags} bags of ${feed.name}`
     };
 
@@ -372,7 +372,7 @@ export default function App() {
       id: `exp_${Date.now()}`,
       category: item.category === 'drugs' || item.category === 'vaccines' ? 'medication' : 'miscellaneous',
       amount: item.unitCost * addedQty,
-      date: new Date('2026-05-29').toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0],
       notes: `Restocked ${addedQty} ${item.unit} of ${item.name}`
     };
 
@@ -469,7 +469,7 @@ export default function App() {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `PoultryCare_ActiveFarmBackup_${new Date('2026-05-29').toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `PoultryCare_ActiveFarmBackup_${new Date().toISOString().split('T')[0]}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
@@ -693,7 +693,7 @@ export default function App() {
               <span className="font-extrabold text-slate-800 tracking-tight text-sm font-display">EggMaster Pro</span>
             </div>
             <div className="hidden md:block text-slate-500 text-xs font-semibold">
-               Main Farm Command Center &bull; {new Date('2026-05-29').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+               Main Farm Command Center &bull; {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
 
@@ -702,10 +702,10 @@ export default function App() {
             <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold" title={IS_USING_WORKER ? `Connected to worker at ${API_BASE}` : IS_PRODUCTION_PAGES ? "No cloud database connected! Setting VITE_API_URL required in Pages settings." : "Using local Express sandbox because VITE_API_URL is empty"}>
               <span className={`h-2 w-2 rounded-full shrink-0 ${IS_USING_WORKER ? 'bg-emerald-500' : IS_PRODUCTION_PAGES ? 'bg-rose-500' : 'bg-blue-500'} animate-pulse`} />
               <span className="text-slate-600 font-mono hidden sm:inline">
-                {IS_USING_WORKER ? 'Cloud Worker Active' : IS_PRODUCTION_PAGES ? 'Database Disconnected' : 'Sandbox Mode'}
+                {IS_USING_WORKER ? 'Connected' : IS_PRODUCTION_PAGES ? 'Disconnected' : 'Connected'}
               </span>
               <span className="text-slate-600 font-mono sm:hidden">
-                {IS_USING_WORKER ? 'Worker Active' : IS_PRODUCTION_PAGES ? 'No DB Connected' : 'Sandbox'}
+                {IS_USING_WORKER ? 'Connected' : IS_PRODUCTION_PAGES ? 'Disconnected' : 'Connected'}
               </span>
               {syncDelaying && <RefreshCw className="w-3 h-3 animate-spin text-emerald-600 shrink-0" />}
             </div>
@@ -950,83 +950,6 @@ export default function App() {
             </div>
           )}
         </main>
-
-        {/* Administrative panel footer bar */}
-        {currentUser?.role === 'admin' && (
-          <footer className="bg-slate-900 border-t border-slate-800 py-4 px-4 sm:px-8 text-xs font-semibold text-slate-400 mt-auto" id="admin_footer_safety">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-emerald-400" />
-                <span>EggMaster Security Shield • Cloud Database Connected</span>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  id="btn_download_manual_backup"
-                  onClick={handleExportSystemBackup}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white rounded font-bold transition-all text-[11px] cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Raw Backup Export
-                </button>
-
-                <label
-                  id="btn_upload_manual_backup"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white rounded font-bold transition-all text-[11px] cursor-pointer"
-                >
-                  <Upload className="w-3.5 h-3.5" /> Import JSON
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportSystemBackup}
-                    className="hidden"
-                  />
-                </label>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    id="btn_restore_seeds_system"
-                    onClick={handleResetToSeedDB}
-                    className={`px-2.5 py-1.5 rounded font-bold transition-all text-[11px] cursor-pointer ${
-                      confirmReset
-                        ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
-                        : 'hover:bg-rose-950/45 text-rose-400 hover:text-rose-350'
-                    }`}
-                  >
-                    {confirmReset ? '⚠️ Confirm Seed Reset' : 'Factory Reset seeds'}
-                  </button>
-                  {confirmReset && (
-                    <button
-                      onClick={() => setConfirmReset(false)}
-                      className="px-2 py-1.5 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded font-bold text-[11px] cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  )}
-
-                  <button
-                    id="btn_wipe_all_data_system"
-                    onClick={handleWipeDB}
-                    className={`px-2.5 py-1.5 rounded font-bold transition-all text-[11px] cursor-pointer ${
-                      confirmWipe
-                        ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                        : 'hover:bg-red-950/45 text-red-400 hover:text-red-350'
-                    }`}
-                  >
-                    {confirmWipe ? '⚠️ Confirm Wipe All' : 'Wipe All Data'}
-                  </button>
-                  {confirmWipe && (
-                    <button
-                      onClick={() => setConfirmWipe(false)}
-                      className="px-2 py-1.5 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 rounded font-bold text-[11px] cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </footer>
-        )}
       </div>
 
     </div>

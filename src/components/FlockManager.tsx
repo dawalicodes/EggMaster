@@ -27,7 +27,7 @@ export default function FlockManager({
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [initialCount, setInitialCount] = useState<number>(500);
-  const [dateAcquired, setDateAcquired] = useState('2026-05-29');
+  const [dateAcquired, setDateAcquired] = useState(new Date().toISOString().split('T')[0]);
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '');
   const [ageWeeksAtAcquisition, setAgeWeeksAtAcquisition] = useState<number>(18);
   const [errorMsg, setErrorMsg] = useState('');
@@ -37,7 +37,7 @@ export default function FlockManager({
 
   // Auto age calculator helper
   const calculateCurrentAge = (batch: Batch) => {
-    const today = new Date('2026-05-29'); // System local baseline
+    const today = new Date(); // System local baseline
     const acquired = new Date(batch.dateAcquired);
     const diffTime = today.getTime() - acquired.getTime();
     if (diffTime < 0) return batch.ageWeeksAtAcquisition;

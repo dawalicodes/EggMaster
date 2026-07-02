@@ -131,7 +131,7 @@ export default function DashboardView({
   }
 
   // Next Due Vaccinations Alerts
-  const currentTimestamp = new Date('2026-05-29').getTime(); // Based on local time
+  const currentTimestamp = new Date().getTime(); // Based on local time
   vaccinationLogs.forEach(v => {
     if (v.nextDueDate) {
       const dueTime = new Date(v.nextDueDate).getTime();
@@ -329,10 +329,10 @@ export default function DashboardView({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
         <div>
           <h1 className="text-xl font-bold tracking-tight font-display text-slate-800">
-            Core Farm Dashboard
+            Farm Dashboard
           </h1>
           <p className="text-slate-500 text-xs mt-1">
-            Real-time daily operations, live performance logs, and feed alerts. Today is <span className="font-mono bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-semibold text-[11px]">{latestDate}</span>
+            Real-time daily operations, live performance logs, and feed alerts.
           </p>
         </div>
       </div>

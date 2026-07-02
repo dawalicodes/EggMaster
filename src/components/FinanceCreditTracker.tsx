@@ -46,7 +46,7 @@ export default function FinanceCreditTracker({
   const [incSource, setIncSource] = useState<'egg_sales' | 'bird_sales' | 'manure_sales' | 'other'>('egg_sales');
   const [incQty, setIncQty] = useState<number>(0);
   const [incPrice, setIncPrice] = useState<number>(0);
-  const [incDate, setIncDate] = useState('2026-05-29');
+  const [incDate, setIncDate] = useState(new Date().toISOString().split('T')[0]);
   const [incCustId, setIncCustId] = useState('');
   const [incStatus, setIncStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
   const [incPaidAmount, setIncPaidAmount] = useState<number>(0);
@@ -60,7 +60,7 @@ export default function FinanceCreditTracker({
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expCategory, setExpCategory] = useState<'feed' | 'medication' | 'transport' | 'labor' | 'miscellaneous'>('feed');
   const [expAmount, setExpAmount] = useState<number>(0);
-  const [expDate, setExpDate] = useState('2026-05-29');
+  const [expDate, setExpDate] = useState(new Date().toISOString().split('T')[0]);
   const [expNotes, setExpNotes] = useState('');
   const [expSupplierId, setExpSupplierId] = useState('');
   const [expStatus, setExpStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
@@ -215,7 +215,7 @@ export default function FinanceCreditTracker({
     onAddCreditPayment({
       incomeId: paymentIncomeId,
       amountPaid: paymentAmount,
-      date: '2026-05-29',
+      date: new Date().toISOString().split('T')[0],
       notes: paymentNotes
     });
 

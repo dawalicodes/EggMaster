@@ -33,10 +33,10 @@ export default function ReportsViewer({
 }: ReportsViewerProps) {
   const [reportDuration, setReportDuration] = useState<'all' | 'weekly' | 'monthly'>('all');
 
-  // Filter relative to current date '2026-05-29'
+  // Filter relative to current date
   const filterByDuration = <T extends { date: string }>(items: T[]): T[] => {
     if (reportDuration === 'all') return items;
-    const refDate = new Date('2026-05-29');
+    const refDate = new Date();
 
     return items.filter(item => {
       const itemDate = new Date(item.date);
@@ -124,7 +124,7 @@ export default function ReportsViewer({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${filename}_2026_05_29.csv`);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

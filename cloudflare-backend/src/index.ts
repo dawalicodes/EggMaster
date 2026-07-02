@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import bcrypt from 'bcryptjs';
 
 type Bindings = {
   DB: D1Database;
@@ -33,13 +34,20 @@ const INITIAL_CUSTOMERS = [
   { id: 'cust_3', name: 'Organic Barn Wholesalers', contact: '+1 (555) 011-3040' }
 ];
 
+const getD1OffsetDate = (offsetDays: number) => {
+  const today = new Date();
+  const d = new Date(today.getTime());
+  d.setDate(today.getDate() + offsetDays);
+  return d.toISOString().split('T')[0];
+};
+
 const INITIAL_BATCHES = [
   {
     id: 'batch_1',
     name: 'Lohmann Brown Batch A',
     initialCount: 1000,
     currentCount: 986,
-    dateAcquired: '2025-11-01',
+    dateAcquired: getD1OffsetDate(-240),
     sourceSupplierId: 'sup_1',
     ageWeeksAtAcquisition: 18,
     status: 'active'
@@ -49,7 +57,7 @@ const INITIAL_BATCHES = [
     name: 'Hy-Line Silver Batch B',
     initialCount: 800,
     currentCount: 798,
-    dateAcquired: '2026-04-10',
+    dateAcquired: getD1OffsetDate(-80),
     sourceSupplierId: 'sup_1',
     ageWeeksAtAcquisition: 16,
     status: 'active'
@@ -58,8 +66,8 @@ const INITIAL_BATCHES = [
 
 const INITIAL_DAILY_RECORDS = [
   {
-    id: 'record_2026-05-15_b1',
-    date: '2026-05-15',
+    id: 'record_today_b1',
+    date: getD1OffsetDate(0),
     batchId: 'batch_1',
     eggsCollected: 890,
     eggsBroken: 12,
@@ -71,8 +79,8 @@ const INITIAL_DAILY_RECORDS = [
     createdBy: 'admin_user'
   },
   {
-    id: 'record_2026-05-15_b2',
-    date: '2026-05-15',
+    id: 'record_today_b2',
+    date: getD1OffsetDate(0),
     batchId: 'batch_2',
     eggsCollected: 120,
     eggsBroken: 4,
@@ -97,22 +105,22 @@ const INITIAL_INVENTORY_ITEMS = [
 ];
 
 const INITIAL_EXPENSES = [
-  { id: 'exp_1', category: 'feed', amount: 840.00, date: '2026-05-10', notes: 'Purchased 20 bags Layers Mash', batchId: null },
-  { id: 'exp_2', category: 'medication', amount: 60.00, date: '2026-05-12', notes: 'Newcastle vaccines + booster vitamins', batchId: 'batch_1' },
-  { id: 'exp_3', category: 'labor', amount: 350.00, date: '2026-05-15', notes: 'Bi-weekly farm helper salary', batchId: null }
+  { id: 'exp_1', category: 'feed', amount: 840.00, date: getD1OffsetDate(-19), notes: 'Purchased 20 bags Layers Mash', batchId: null },
+  { id: 'exp_2', category: 'medication', amount: 60.00, date: getD1OffsetDate(-17), notes: 'Newcastle vaccines + booster vitamins', batchId: 'batch_1' },
+  { id: 'exp_3', category: 'labor', amount: 350.00, date: getD1OffsetDate(-14), notes: 'Bi-weekly farm helper salary', batchId: null }
 ];
 
 const INITIAL_INCOME = [
-  { id: 'inc_1', source: 'egg_sales', quantity: 50, unitPrice: 7.50, totalAmount: 375.00, date: '2026-05-18', customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 375.00 },
-  { id: 'inc_2', source: 'egg_sales', quantity: 120, unitPrice: 7.20, totalAmount: 864.00, date: '2026-05-22', customerId: 'cust_2', paymentStatus: 'partial', amountPaid: 500.00 }
+  { id: 'inc_1', source: 'egg_sales', quantity: 50, unitPrice: 7.50, totalAmount: 375.00, date: getD1OffsetDate(-11), customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 375.00 },
+  { id: 'inc_2', source: 'egg_sales', quantity: 120, unitPrice: 7.20, totalAmount: 864.00, date: getD1OffsetDate(-7), customerId: 'cust_2', paymentStatus: 'partial', amountPaid: 500.00 }
 ];
 
 const INITIAL_CREDIT_PAYMENTS = [
-  { id: 'pmt_1', incomeId: 'inc_2', amountPaid: 500.00, date: '2026-05-22', notes: 'First instalment for wholesale egg order' }
+  { id: 'pmt_1', incomeId: 'inc_2', amountPaid: 500.00, date: getD1OffsetDate(-7), notes: 'First instalment for wholesale egg order' }
 ];
 
 const INITIAL_VACCINATION_LOGS = [
-  { id: 'vac_1', batchId: 'batch_1', vaccineOrDrugName: 'Newcastle G7 Vaccine', dateAdministered: '2026-05-02', nextDueDate: '2026-06-02', dosage: '0.2ml/bird via drops', notes: 'Administered under Vet guidance' }
+  { id: 'vac_1', batchId: 'batch_1', vaccineOrDrugName: 'Newcastle G7 Vaccine', dateAdministered: getD1OffsetDate(-27), nextDueDate: getD1OffsetDate(3), dosage: '0.2ml/bird via drops', notes: 'Administered under Vet guidance' }
 ];
 
 // Helper to seed database if empty
@@ -149,7 +157,10 @@ async function seedDatabaseIfEmpty(db: D1Database): Promise<void> {
   // Seed everything transactionally via batching
   const batchStatements: D1PreparedStatement[] = [];
 
-  INITIAL_USERS.forEach(u => batchStatements.push(db.prepare("INSERT INTO users (id, username, password, name, role) VALUES (?, ?, ?, ?, ?)") .bind(u.id, u.username, u.password, u.name, u.role)));
+  INITIAL_USERS.forEach(u => {
+    const hashedPassword = bcrypt.hashSync(u.password, 10);
+    batchStatements.push(db.prepare("INSERT INTO users (id, username, password, name, role) VALUES (?, ?, ?, ?, ?)") .bind(u.id, u.username, hashedPassword, u.name, u.role));
+  });
   INITIAL_SUPPLIERS.forEach(s => batchStatements.push(db.prepare("INSERT INTO suppliers (id, name, contact) VALUES (?, ?, ?)") .bind(s.id, s.name, s.contact)));
   INITIAL_CUSTOMERS.forEach(c => batchStatements.push(db.prepare("INSERT INTO customers (id, name, contact) VALUES (?, ?, ?)") .bind(c.id, c.name, c.contact)));
   INITIAL_BATCHES.forEach(b => batchStatements.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status)));
@@ -164,17 +175,43 @@ async function seedDatabaseIfEmpty(db: D1Database): Promise<void> {
   await db.batch(batchStatements);
 }
 
-// Ensure database has initial seed tables populated
+function isBCryptHash(str: string): boolean {
+  return /^\$2[ayb]\$.{56}$/.test(str);
+}
+
+// Ensure database has initial seed tables populated and existing passwords are migrated
 app.use('*', async (c, next) => {
-  await seedDatabaseIfEmpty(c.env.DB);
+  const db = c.env.DB;
+  await seedDatabaseIfEmpty(db);
+
+  // Migrate any existing plaintext passwords in D1
+  try {
+    const usersRes = await db.prepare("SELECT * FROM users").all<any>();
+    if (usersRes && usersRes.results) {
+      const updateStatements: D1PreparedStatement[] = [];
+      for (const u of usersRes.results) {
+        if (u.password && !isBCryptHash(u.password)) {
+          const hashed = bcrypt.hashSync(u.password, 10);
+          updateStatements.push(db.prepare("UPDATE users SET password = ? WHERE id = ?").bind(hashed, u.id));
+        }
+      }
+      if (updateStatements.length > 0) {
+        await db.batch(updateStatements);
+        console.log(`Migrated ${updateStatements.length} D1 users to bcrypt.`);
+      }
+    }
+  } catch (err) {
+    console.error("Error migrating D1 passwords:", err);
+  }
+
   await next();
 });
 
 // --- AUTHENTICATION ENDPOINT ---
 app.post('/api/login', async (c) => {
   const { username, password } = await c.req.json() as any;
-  const user = await c.env.DB.prepare("SELECT * FROM users WHERE username = ? AND password = ?").bind(username, password).first<any>();
-  if (user) {
+  const user = await c.env.DB.prepare("SELECT * FROM users WHERE LOWER(username) = LOWER(?)").bind(username).first<any>();
+  if (user && bcrypt.compareSync(password, user.password)) {
     const { password: _, ...userWithoutPassword } = user;
     return c.json({
       status: 'success',
@@ -330,8 +367,9 @@ app.post('/api/users', async (c) => {
   }
 
   const id = 'user_' + Math.random().toString(36).substring(2, 11);
+  const hashedPassword = bcrypt.hashSync(password, 10);
   await c.env.DB.prepare("INSERT INTO users (id, name, username, password, role) VALUES (?, ?, ?, ?, ?)")
-    .bind(id, name, username, password, role)
+    .bind(id, name, username, hashedPassword, role)
     .run();
 
   return c.json({ status: 'success', message: 'User profile created successfully.', user: { id, name, username, role } });
@@ -355,7 +393,7 @@ app.put('/api/users/:id', async (c) => {
 
   const updatedName = name || user.name;
   const updatedUsername = username || user.username;
-  const updatedPassword = password || user.password;
+  const updatedPassword = password ? bcrypt.hashSync(password, 10) : user.password;
   let updatedRole = role || user.role;
 
   if (user.role === 'admin' && role === 'worker') {

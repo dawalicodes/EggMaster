@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
+import bcrypt from 'bcryptjs';
 
 // Resolve directory name for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -33,7 +34,15 @@ function getWeeksDifference(dateStr1: string, dateStr2: string): number {
 
 // Ensure database directory and file exist with detailed realistic seed data.
 function getInitialData() {
-  const currentDate = '2026-05-29';
+  const today = new Date();
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  const getDateOffset = (offsetDays: number) => {
+    const d = new Date(today.getTime());
+    d.setDate(today.getDate() + offsetDays);
+    return formatDate(d);
+  };
+
+  const currentDate = formatDate(today);
   
   const suppliers = [
     { id: 'sup_1', name: 'Golden Chicks Hatchery Ltd', contact: '+1 (555) 019-2831' },
@@ -47,15 +56,15 @@ function getInitialData() {
     { id: 'cust_3', name: 'Organic Barn Wholesalers', contact: '+1 (555) 011-3040' }
   ];
 
-  // Batch 1: Lohmann Brown (laying) acquired 30 weeks ago (or let's say acquired at 18 weeks, 12 weeks ago)
-  // Batch 2: Hy-Line Silver (pullets, just starting to lay) acquired 4 weeks ago at 16 weeks of age
+  // Batch 1: Lohmann Brown (laying) acquired 240 days ago
+  // Batch 2: Hy-Line Silver acquired 80 days ago
   const batches = [
     {
       id: 'batch_1',
       name: 'Lohmann Brown Batch A',
       initialCount: 1000,
       currentCount: 986, // 14 birds mortality over months
-      dateAcquired: '2025-11-01',
+      dateAcquired: getDateOffset(-240),
       sourceSupplierId: 'sup_1',
       ageWeeksAtAcquisition: 18, // acquired as point of lay
       status: 'active'
@@ -65,7 +74,7 @@ function getInitialData() {
       name: 'Hy-Line Silver Batch B',
       initialCount: 800,
       currentCount: 798, // 2 birds mortality
-      dateAcquired: '2026-04-10',
+      dateAcquired: getDateOffset(-80),
       sourceSupplierId: 'sup_1',
       ageWeeksAtAcquisition: 16,
       status: 'active'
@@ -74,12 +83,9 @@ function getInitialData() {
 
   // Seed daily records for last 15 days to populate graphs wonderfully
   const dailyRecords = [];
-  const baseDate = new Date('2026-05-15');
   
   for (let i = 0; i <= 14; i++) {
-    const recordDate = new Date(baseDate.getTime());
-    recordDate.setDate(baseDate.getDate() + i);
-    const dateStr = recordDate.toISOString().split('T')[0];
+    const dateStr = getDateOffset(-14 + i);
 
     // Batch 1: Lohmann Brown Batch A
     // Stable high layer performance (~90% production rate)
@@ -107,7 +113,7 @@ function getInitialData() {
     });
 
     // Batch 2: Hy-Line Silver Batch B
-    // Just coming into lay (production rate starts around 10% on May 15, and reaches 55% of 798 birds by May 29)
+    // Just coming into lay (production rate starts around 15% 14 days ago, and reaches 60% of 798 birds today)
     const birdCount2 = 798;
     const progressFactor = i / 14; // 0 to 1
     const targetProdRate = 0.15 + (progressFactor * 0.45); // 15% to 60%
@@ -145,34 +151,33 @@ function getInitialData() {
 
   // Expenses: feed purchases, transport, wages
   const expenses = [
-    { id: 'exp_1', category: 'feed', amount: 840.00, date: '2026-05-10', notes: 'Purchased 20 bags Layers Mash', batchId: '' },
-    { id: 'exp_2', category: 'medication', amount: 60.00, date: '2026-05-12', notes: 'Newcastle vaccines + booster vitamins', batchId: 'batch_1' },
-    { id: 'exp_3', category: 'labor', amount: 350.00, date: '2026-05-15', notes: 'Bi-weekly farm helper salary', batchId: '' },
-    { id: 'exp_4', category: 'transport', amount: 75.00, date: '2026-05-20', notes: 'Delivery cost for egg crates and tools', batchId: '' },
-    { id: 'exp_5', category: 'feed', amount: 385.00, date: '2026-05-24', notes: '10 bags growers mash', batchId: 'batch_2' }
+    { id: 'exp_1', category: 'feed', amount: 840.00, date: getDateOffset(-19), notes: 'Purchased 20 bags Layers Mash', batchId: '' },
+    { id: 'exp_2', category: 'medication', amount: 60.00, date: getDateOffset(-17), notes: 'Newcastle vaccines + booster vitamins', batchId: 'batch_1' },
+    { id: 'exp_3', category: 'labor', amount: 350.00, date: getDateOffset(-14), notes: 'Bi-weekly farm helper salary', batchId: '' },
+    { id: 'exp_4', category: 'transport', amount: 75.00, date: getDateOffset(-9), notes: 'Delivery cost for egg crates and tools', batchId: '' },
+    { id: 'exp_5', category: 'feed', amount: 385.00, date: getDateOffset(-5), notes: '10 bags growers mash', batchId: 'batch_2' }
   ];
 
   // Income: Egg sales, sales of laying-exhausted birds or manure
-  // Let us create a few large egg sale transactions. Some on credit.
   const income = [
-    { id: 'inc_1', source: 'egg_sales', quantity: 50, unitPrice: 7.50, totalAmount: 375.00, date: '2026-05-18', customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 375.00 },
-    { id: 'inc_2', source: 'egg_sales', quantity: 120, unitPrice: 7.20, totalAmount: 864.00, date: '2026-05-22', customerId: 'cust_2', paymentStatus: 'partial', amountPaid: 500.00 }, // Owed $364
-    { id: 'inc_3', source: 'manure_sales', quantity: 30, unitPrice: 5.00, totalAmount: 150.00, date: '2026-05-25', customerId: 'cust_3', paymentStatus: 'paid', amountPaid: 150.00 },
-    { id: 'inc_4', source: 'egg_sales', quantity: 80, unitPrice: 7.50, totalAmount: 600.00, date: '2026-05-28', customerId: 'cust_1', paymentStatus: 'unpaid', amountPaid: 0.00 } // Owed $600
+    { id: 'inc_1', source: 'egg_sales', quantity: 50, unitPrice: 7.50, totalAmount: 375.00, date: getDateOffset(-11), customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 375.00 },
+    { id: 'inc_2', source: 'egg_sales', quantity: 120, unitPrice: 7.20, totalAmount: 864.00, date: getDateOffset(-7), customerId: 'cust_2', paymentStatus: 'partial', amountPaid: 500.00 }, // Owed $364
+    { id: 'inc_3', source: 'manure_sales', quantity: 30, unitPrice: 5.00, totalAmount: 150.00, date: getDateOffset(-4), customerId: 'cust_3', paymentStatus: 'paid', amountPaid: 150.00 },
+    { id: 'inc_4', source: 'egg_sales', quantity: 80, unitPrice: 7.50, totalAmount: 600.00, date: getDateOffset(-1), customerId: 'cust_1', paymentStatus: 'unpaid', amountPaid: 0.00 } // Owed $600
   ];
 
   const creditPayments = [
-    { id: 'pmt_1', incomeId: 'inc_2', amountPaid: 500.00, date: '2026-05-22', notes: 'First instalment for wholesale egg order' }
+    { id: 'pmt_1', incomeId: 'inc_2', amountPaid: 500.00, date: getDateOffset(-7), notes: 'First instalment for wholesale egg order' }
   ];
 
   const vaccinationLogs = [
-    { id: 'vac_1', batchId: 'batch_1', vaccineOrDrugName: 'Newcastle G7 Vaccine', dateAdministered: '2026-05-02', nextDueDate: '2026-06-02', dosage: '0.2ml/bird via drops', notes: 'Administered under Vet guidance' },
-    { id: 'vac_2', batchId: 'batch_2', vaccineOrDrugName: 'Gumboro Booster vaccine', dateAdministered: '2026-05-18', nextDueDate: '2026-06-18', dosage: 'Water dilution', notes: 'All birds vaccinated successfully' }
+    { id: 'vac_1', batchId: 'batch_1', vaccineOrDrugName: 'Newcastle G7 Vaccine', dateAdministered: getDateOffset(-27), nextDueDate: getDateOffset(3), dosage: '0.2ml/bird via drops', notes: 'Administered under Vet guidance' },
+    { id: 'vac_2', batchId: 'batch_2', vaccineOrDrugName: 'Gumboro Booster vaccine', dateAdministered: getDateOffset(-11), nextDueDate: getDateOffset(19), dosage: 'Water dilution', notes: 'All birds vaccinated successfully' }
   ];
 
   const users = [
-    { id: 'admin_user', username: 'admin', name: 'Farm Manager Admin', role: 'admin', password: 'admin123' },
-    { id: 'worker_user', username: 'worker', name: 'Farm Caretaker Worker', role: 'worker', password: 'worker123' }
+    { id: 'admin_user', username: 'admin', name: 'Farm Manager Admin', role: 'admin', password: bcrypt.hashSync('admin123', 10) },
+    { id: 'worker_user', username: 'worker', name: 'Farm Caretaker Worker', role: 'worker', password: bcrypt.hashSync('worker123', 10) }
   ];
 
   return {
@@ -199,16 +204,34 @@ if (!fs.existsSync(DB_PATH)) {
   fs.writeFileSync(DB_PATH, JSON.stringify(getInitialData(), null, 2));
 }
 
+function isBCryptHash(str: string): boolean {
+  return /^\$2[ayb]\$.{56}$/.test(str);
+}
+
 // Read database
 function readDb() {
   try {
     const data = fs.readFileSync(DB_PATH, 'utf8');
     const parsed = JSON.parse(data);
+    let changed = false;
+
     if (!parsed.users) {
       parsed.users = [
-        { id: 'admin_user', username: 'admin', name: 'Farm Manager Admin', role: 'admin', password: 'admin123' },
-        { id: 'worker_user', username: 'worker', name: 'Farm Caretaker Worker', role: 'worker', password: 'worker123' }
+        { id: 'admin_user', username: 'admin', name: 'Farm Manager Admin', role: 'admin', password: bcrypt.hashSync('admin123', 10) },
+        { id: 'worker_user', username: 'worker', name: 'Farm Caretaker Worker', role: 'worker', password: bcrypt.hashSync('worker123', 10) }
       ];
+      changed = true;
+    } else {
+      // Migrate any plaintext passwords to hashed
+      parsed.users.forEach((u: any) => {
+        if (u.password && !isBCryptHash(u.password)) {
+          u.password = bcrypt.hashSync(u.password, 10);
+          changed = true;
+        }
+      });
+    }
+
+    if (changed) {
       fs.writeFileSync(DB_PATH, JSON.stringify(parsed, null, 2));
     }
     return parsed;
@@ -225,13 +248,16 @@ function writeDb(data: any) {
   fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }
 
+// Run initial migration/check on startup
+readDb();
+
 // Login API Endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const db = readDb();
   
-  const user = db.users.find((u: any) => u.username === username && u.password === password);
-  if (user) {
+  const user = db.users.find((u: any) => u.username.toLowerCase() === username.toLowerCase());
+  if (user && bcrypt.compareSync(password, user.password)) {
     const { password: _, ...userWithoutPassword } = user;
     return res.json({
       status: 'success',
@@ -326,7 +352,7 @@ app.post('/api/users', (req, res) => {
     id: 'user_' + Math.random().toString(36).substring(2, 11),
     name,
     username,
-    password,
+    password: bcrypt.hashSync(password, 10),
     role
   };
 
@@ -357,7 +383,7 @@ app.put('/api/users/:id', (req, res) => {
 
   if (name) db.users[userIndex].name = name;
   if (username) db.users[userIndex].username = username;
-  if (password) db.users[userIndex].password = password;
+  if (password) db.users[userIndex].password = bcrypt.hashSync(password, 10);
   if (role) {
     if (db.users[userIndex].role === 'admin' && role === 'worker') {
       const adminsCount = db.users.filter((u: any) => u.role === 'admin').length;

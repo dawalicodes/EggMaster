@@ -24,7 +24,7 @@ export default function EggMortalityTracker({
 }: EggMortalityTrackerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id || '');
-  const [date, setDate] = useState('2026-05-29'); // Baseline default
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Baseline default
   const [eggsCollected, setEggsCollected] = useState<number>(0);
   const [eggsBroken, setEggsBroken] = useState<number>(0);
   const [eggsSpoilt, setEggsSpoilt] = useState<number>(0);

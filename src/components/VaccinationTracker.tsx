@@ -21,7 +21,7 @@ export default function VaccinationTracker({
   const [showAddForm, setShowAddForm] = useState(false);
   const [batchId, setBatchId] = useState(batches[0]?.id || '');
   const [vaccineName, setVaccineName] = useState('');
-  const [dateAdministered, setDateAdministered] = useState('2026-05-29');
+  const [dateAdministered, setDateAdministered] = useState(new Date().toISOString().split('T')[0]);
   const [nextDueDate, setNextDueDate] = useState('');
   const [dosage, setDosage] = useState('');
   const [notes, setNotes] = useState('');
@@ -53,7 +53,7 @@ export default function VaccinationTracker({
   // Identify upcoming schedule within next 14 days
   const activeAlerts = vaccinationLogs.filter(v => {
     if (!v.nextDueDate) return false;
-    const current = new Date('2026-05-29').getTime();
+    const current = new Date().getTime();
     const target = new Date(v.nextDueDate).getTime();
     const diff = (target - current) / (1000 * 60 * 60 * 24);
     return diff >= 0 && diff <= 14;
@@ -197,7 +197,7 @@ export default function VaccinationTracker({
             ) : (
               activeAlerts.map(sch => {
                 const batch = batches.find(b => b.id === sch.batchId);
-                const current = new Date('2026-05-29').getTime(); // System time
+                const current = new Date().getTime(); // System time
                 const target = new Date(sch.nextDueDate!).getTime();
                 const diffDays = Math.ceil((target - current) / (1000 * 60 * 60 * 24));
 

@@ -129,39 +129,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               </button>
             </div>
           </form>
-
-          {/* Connection Mode Status */}
-          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${
-                IS_USING_WORKER 
-                  ? 'bg-emerald-500 animate-pulse' 
-                  : IS_PRODUCTION_PAGES 
-                    ? 'bg-rose-500' 
-                    : 'bg-blue-500'
-              }`} />
-              <span className="text-xs font-bold text-slate-700">
-                {IS_USING_WORKER 
-                  ? 'Cloud Worker Active' 
-                  : IS_PRODUCTION_PAGES 
-                    ? 'Cloud Database DISCONNECTED' 
-                    : 'Sandbox Environment Active'}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              {IS_USING_WORKER ? (
-                <span>Connected to remote Cloudflare Worker backend: <code className="bg-slate-50 px-1 py-0.5 rounded text-slate-600 font-mono break-all">{API_BASE}</code></span>
-              ) : IS_PRODUCTION_PAGES ? (
-                <span className="text-rose-600 font-medium">
-                  <strong>WARNING:</strong> This deployed version has NO database connection because <code>VITE_API_URL</code> is not configured in Cloudflare Pages build settings. 
-                  Any data you add now will only stay in browser memory and be lost upon page refresh! 
-                  Please configure <code>VITE_API_URL</code> pointing to your Cloudflare Worker in your Cloudflare Pages dashboard under <strong>Settings &rarr; Environment variables</strong> and redeploy.
-                </span>
-              ) : (
-                <span>Currently running on the local Sandbox backend database. To connect your deployed Cloudflare Worker backend, please add the <code>VITE_API_URL</code> environment variable as a <strong>Text</strong> variable (not a secret) under Settings.</span>
-              )}
-            </p>
-          </div>
         </div>
       </div>
     </div>
