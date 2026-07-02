@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Loader } from 'lucide-react';
 import { User } from '../types';
-import { API_BASE } from '../utils/api';
+import { API_BASE, IS_USING_WORKER } from '../utils/api';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -135,6 +135,23 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               </button>
             </div>
           </form>
+
+          {/* Connection Mode Status */}
+          <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${IS_USING_WORKER ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'}`} />
+              <span className="text-xs font-bold text-slate-700">
+                {IS_USING_WORKER ? 'Cloud Worker Active' : 'Sandbox Environment Active'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              {IS_USING_WORKER ? (
+                <span>Connected to remote Cloudflare Worker backend: <code className="bg-slate-50 px-1 py-0.5 rounded text-slate-600 font-mono break-all">{API_BASE}</code></span>
+              ) : (
+                <span>Currently running on the local Sandbox backend database. To connect your deployed Cloudflare Worker backend, please add the <code>VITE_API_URL</code> environment variable as a <strong>Text</strong> variable (not a secret) under Settings.</span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>

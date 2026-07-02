@@ -42,7 +42,8 @@ import {
   syncFarmData,
   resetServerDatabase,
   wipeServerDatabase,
-  testConnection
+  IS_USING_WORKER,
+  API_BASE
 } from './utils/api';
 
 import LoginScreen from './components/LoginScreen';
@@ -58,7 +59,6 @@ import ProfileManager from './components/ProfileManager';
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOffline, setIsOffline] = useState(false);
   const [syncDelaying, setSyncDelaying] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'flocks' | 'logs' | 'inventory' | 'finances' | 'health' | 'reports' | 'profiles'>('dashboard');
 
@@ -88,22 +88,18 @@ export default function App() {
     }
     
     loadFarmDatabase();
-
-    // Setup periodic online checkers
-    const timer = setInterval(async () => {
-      const isReachable = await testConnection();
-      setIsOffline(!isReachable);
-    }, 15000);
-
-    return () => clearInterval(timer);
   }, []);
 
   const loadFarmDatabase = async () => {
     setLoading(true);
-    const { data, isOffline: offline } = await getFarmData();
-    setIsOffline(offline);
-    setUnifiedFields(data);
-    setLoading(false);
+    try {
+      const { data } = await getFarmData();
+      setUnifiedFields(data);
+    } catch (err: any) {
+      setSyncStatusMsg({ success: false, text: err.message || 'Failed to fetch farm data from server.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const setUnifiedFields = (data: FarmBackupPayload) => {
@@ -137,14 +133,18 @@ export default function App() {
   // Helper trigger to perform remote synchronization on mutation changes
   const dispatchSync = async (updatedPayload: FarmBackupPayload) => {
     setSyncDelaying(true);
-    const res = await syncFarmData(updatedPayload, currentUser);
-    setIsOffline(res.isOffline);
-    setSyncStatusMsg({ success: res.success, text: res.message });
-    setSyncDelaying(false);
+    try {
+      const res = await syncFarmData(updatedPayload, currentUser);
+      setSyncStatusMsg({ success: res.success, text: res.message });
+    } catch (err: any) {
+      setSyncStatusMsg({ success: false, text: err.message || 'Failed to sync changes with server.' });
+    } finally {
+      setSyncDelaying(false);
+    }
 
     // Clear alert after a brief flash
     setTimeout(() => {
-      setSyncStatusMsg({ success: true, text: isOffline ? 'Saved locally' : 'Cloud Synchronised' });
+      setSyncStatusMsg({ success: true, text: 'Cloud Synchronised' });
     }, 3000);
   };
 
@@ -698,13 +698,13 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             {/* Sync connection details */}
-            <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold">
-              <span className={`h-2 w-2 rounded-full shrink-0 ${isOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+            <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold" title={IS_USING_WORKER ? `Connected to worker at ${API_BASE}` : "Using local Express sandbox because VITE_API_URL is empty"}>
+              <span className={`h-2 w-2 rounded-full shrink-0 ${IS_USING_WORKER ? 'bg-emerald-500' : 'bg-blue-500'} animate-pulse`} />
               <span className="text-slate-600 font-mono hidden sm:inline">
-                {isOffline ? 'Offline Mode' : 'Cloud Synchronised'}
+                {IS_USING_WORKER ? 'Cloud Worker Active' : 'Sandbox Mode'}
               </span>
               <span className="text-slate-600 font-mono sm:hidden">
-                {isOffline ? 'Offline' : 'Synced'}
+                {IS_USING_WORKER ? 'Worker Active' : 'Sandbox'}
               </span>
               {syncDelaying && <RefreshCw className="w-3 h-3 animate-spin text-emerald-600 shrink-0" />}
             </div>
@@ -816,6 +816,21 @@ export default function App() {
             </div>
           ) : (
             <div className="space-y-6">
+              {!IS_USING_WORKER && (
+                <div className="bg-blue-50/80 border border-blue-150 rounded-2xl p-4 sm:p-5 text-xs text-slate-700 leading-relaxed shadow-3xs flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl shrink-0">
+                    <Database className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-bold text-slate-900 text-sm">Local Sandbox Mode Enabled</h4>
+                    <p className="text-slate-600">
+                      You are logged in and saving data securely inside the workspace sandbox container (stored in <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">poultry_db.json</code>). 
+                      To route queries to your newly created <strong>Cloudflare Worker</strong> backend, add your custom <strong>VITE_API_URL</strong> environment variable under Settings (set as a <strong>Text</strong> value, not a Secret).
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* View components renderer dynamically */}
               {activeTab === 'dashboard' && (
                 <DashboardView
@@ -921,7 +936,7 @@ export default function App() {
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-emerald-400" />
-                <span>EggMaster Security Shield • Local Cache Node Active</span>
+                <span>EggMaster Security Shield • Cloud Database Connected</span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">

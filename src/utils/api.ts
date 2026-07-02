@@ -6,127 +6,68 @@
 import { FarmBackupPayload, User } from '../types';
 
 export const API_BASE = ((import.meta as any).env?.VITE_API_URL as string) || '';
+export const IS_USING_WORKER = !!((import.meta as any).env?.VITE_API_URL as string);
 
-const STORAGE_KEY = 'poultry_farm_data';
-const PENDING_SYNC_KEY = 'poultry_pending_sync';
-
-// Check if we are online or can reach the API
-export async function testConnection(): Promise<boolean> {
-  try {
-    const res = await fetch(`${API_BASE}/api/data`, { method: 'HEAD', cache: 'no-cache' });
-    return res.ok;
-  } catch (error) {
-    return false;
+// Fetch database records from cloud
+export async function getFarmData(): Promise<{ data: FarmBackupPayload }> {
+  const res = await fetch(`${API_BASE}/api/data`);
+  if (!res.ok) {
+    throw new Error('API server returned error status');
   }
-}
-
-// Fetch database records with offline fallback
-export async function getFarmData(): Promise<{ data: FarmBackupPayload; isOffline: boolean }> {
-  try {
-    const res = await fetch(`${API_BASE}/api/data`);
-    if (!res.ok) {
-      throw new Error('API server returned error status');
-    }
-    const data = await res.json() as FarmBackupPayload;
-    // Cache to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    return { data, isOffline: false };
-  } catch (error) {
-    console.warn('API server unreachable, fallback to localStorage:', error);
-    const localStr = localStorage.getItem(STORAGE_KEY);
-    if (localStr) {
-      try {
-        return { data: JSON.parse(localStr) as FarmBackupPayload, isOffline: true };
-      } catch (e) {
-        console.error('Local JSON corrupt, reloading default empty seed', e);
-      }
-    }
-    // Return empty state structured payloads if completely fresh and offline
-    return { data: getFallbackSeeds(), isOffline: true };
-  }
+  const data = await res.json() as FarmBackupPayload;
+  return { data };
 }
 
 // Sync current data back to server
 export async function syncFarmData(
   data: FarmBackupPayload,
   user: User | null
-): Promise<{ success: boolean; message: string; isOffline: boolean }> {
-  // Always update local cache as primary first
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE}/api/sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data, user })
+  });
 
-  try {
-    const response = await fetch(`${API_BASE}/api/sync`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, user })
-    });
+  if (!response.ok) {
+    throw new Error('Network response was not ok during synchronization.');
+  }
 
-    const result = await response.json();
-    if (response.ok && result.status === 'success') {
-      localStorage.removeItem(PENDING_SYNC_KEY);
-      return { success: true, message: 'Synchronised with server successfully!', isOffline: false };
-    } else {
-      return {
-        success: false,
-        message: result.message || 'Server rejected synchronisation.',
-        isOffline: false
-      };
-    }
-  } catch (err) {
-    console.warn('Could not sync with server. Changes saved locally:', err);
-    localStorage.setItem(PENDING_SYNC_KEY, 'true');
+  const result = await response.json();
+  if (result.status === 'success') {
+    return { success: true, message: 'Synchronised with server successfully!' };
+  } else {
     return {
-      success: true,
-      message: 'Network offline. Operations stored locally in device storage.',
-      isOffline: true
+      success: false,
+      message: result.message || 'Server rejected synchronisation.'
     };
   }
 }
 
 // Manual database reset
 export async function resetServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
-  try {
-    const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
-    const result = await res.json();
-    if (res.ok && result.status === 'success') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
-      return { success: true, data: result.data };
-    }
-  } catch (err) {
-    console.error('Reset failed:', err);
+  const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error('Reset request failed on server');
   }
-  // If reset failed/offline, overwrite localStorage with fresh local seed
-  const fallback = getFallbackSeeds();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
-  return { success: true, data: fallback };
+  const result = await res.json();
+  if (result.status === 'success') {
+    return { success: true, data: result.data };
+  }
+  throw new Error(result.message || 'Reset failed');
 }
 
 // Wipe database completely
 export async function wipeServerDatabase(): Promise<{ success: boolean; data: FarmBackupPayload }> {
-  try {
-    const res = await fetch(`${API_BASE}/api/wipe`, { method: 'POST' });
-    const result = await res.json();
-    if (res.ok && result.status === 'success') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
-      return { success: true, data: result.data };
-    }
-  } catch (err) {
-    console.error('Wipe failed:', err);
+  const res = await fetch(`${API_BASE}/api/wipe`, { method: 'POST' });
+  if (!res.ok) {
+    throw new Error('Wipe request failed on server');
   }
-  const empty: FarmBackupPayload = {
-    batches: [],
-    dailyRecords: [],
-    feedStock: [],
-    inventoryItems: [],
-    expenses: [],
-    income: [],
-    customers: [],
-    suppliers: [],
-    creditPayments: [],
-    vaccinationLogs: []
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
-  return { success: true, data: empty };
+  const result = await res.json();
+  if (result.status === 'success') {
+    return { success: true, data: result.data };
+  }
+  throw new Error(result.message || 'Wipe failed');
 }
 
 // Helper structure for initial fallbacks in pure sandbox client mode
