@@ -43,7 +43,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMsg('Network/Connection error. Please verify that your Cloudflare backend is active and that VITE_API_URL is configured correctly in your settings.');
+      const targetUrl = `${API_BASE}/api/login`;
+      setErrorMsg(`Network/Connection error. Tried to connect to "${targetUrl}". Please verify that your Cloudflare backend is active, CORS is enabled, and VITE_API_URL is configured correctly in your settings.`);
     } finally {
       setLoading(false);
     }

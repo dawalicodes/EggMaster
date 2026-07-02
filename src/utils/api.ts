@@ -5,8 +5,13 @@
 
 import { FarmBackupPayload, User } from '../types';
 
-export const API_BASE = ((import.meta as any).env?.VITE_API_URL as string) || '';
-export const IS_USING_WORKER = !!((import.meta as any).env?.VITE_API_URL as string);
+// @ts-ignore
+let rawApiUrl = (import.meta.env?.VITE_API_URL as string) || '';
+if (rawApiUrl.endsWith('/')) {
+  rawApiUrl = rawApiUrl.slice(0, -1);
+}
+export const API_BASE = rawApiUrl;
+export const IS_USING_WORKER = !!rawApiUrl;
 export const IS_PRODUCTION_PAGES = typeof window !== 'undefined' && window.location.hostname.endsWith('pages.dev');
 
 // Fetch database records from cloud
