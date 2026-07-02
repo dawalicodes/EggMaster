@@ -73,7 +73,7 @@ export default function EggMortalityTracker({
       mortalityCause: mortalityCount > 0 ? mortalityCause : '',
       feedConsumedBags,
       notes,
-      createdBy: user?.name || 'Worker Log'
+      createdBy: user?.id || 'admin_user'
     });
 
     // Reset fields
@@ -383,7 +383,7 @@ export default function EggMortalityTracker({
                     </td>
                     <td className="px-3 py-3 sm:px-5 sm:py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2.5">
-                        <span className="text-[10px] text-slate-400 italic">By: {rec.createdBy}</span>
+                        <span className="text-[10px] text-slate-400 italic">By: {rec.createdBy === 'admin_user' || rec.createdBy === 'admin' ? 'Admin' : (rec.createdBy === 'worker_user' || rec.createdBy === 'worker' ? 'Worker' : rec.createdBy)}</span>
                         {user?.role === 'admin' ? (
                           <div className="flex items-center gap-1">
                             {deleteConfirmId === rec.id && (
