@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { DollarSign, PlusCircle, ArrowUpRight, ArrowDownRight, Users, Check, AlertCircle, ShieldAlert } from 'lucide-react';
 import { Expense, Income, Customer, Supplier, CreditPayment, User } from '../types';
+import CustomSelect from './CustomSelect';
 
 interface FinanceCreditTrackerProps {
   expenses: Expense[];
@@ -584,7 +585,7 @@ export default function FinanceCreditTracker({
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Source Category</label>
-                  <select
+                  <CustomSelect
                     value={incSource}
                     onChange={(e) => setIncSource(e.target.value as any)}
                     className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -593,7 +594,7 @@ export default function FinanceCreditTracker({
                     <option value="bird_sales">Bird Disposal Hen Sales</option>
                     <option value="manure_sales">Manure Fertilizer Sales</option>
                     <option value="other">Miscellaneous Other</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -652,7 +653,7 @@ export default function FinanceCreditTracker({
                       />
                     </div>
                   ) : (
-                    <select
+                    <CustomSelect
                       value={incCustId}
                       onChange={(e) => setIncCustId(e.target.value)}
                       className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -661,14 +662,14 @@ export default function FinanceCreditTracker({
                       {customers.map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase block">Term Status</label>
-                    <select
+                    <CustomSelect
                       value={incStatus}
                       onChange={(e) => setIncStatus(e.target.value as any)}
                       className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -676,7 +677,7 @@ export default function FinanceCreditTracker({
                       <option value="paid">Fully Settled</option>
                       <option value="unpaid">100% On Credit</option>
                       <option value="partial">Partial Payment</option>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
@@ -744,7 +745,7 @@ export default function FinanceCreditTracker({
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Expense Category</label>
-                  <select
+                  <CustomSelect
                     value={expCategory}
                     onChange={(e) => setExpCategory(e.target.value as any)}
                     className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -754,7 +755,7 @@ export default function FinanceCreditTracker({
                     <option value="transport">Transport & Logistics</option>
                     <option value="labor">Labor & Salaries</option>
                     <option value="miscellaneous">Miscellaneous General</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -796,7 +797,7 @@ export default function FinanceCreditTracker({
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Associated Supplier Vendor (Optional)</label>
-                  <select
+                  <CustomSelect
                     value={expSupplierId}
                     onChange={(e) => setExpSupplierId(e.target.value)}
                     className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -805,7 +806,7 @@ export default function FinanceCreditTracker({
                     {suppliers.map(sup => (
                       <option key={sup.id} value={sup.id}>{sup.name}</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 {expSupplierId && (
@@ -813,7 +814,7 @@ export default function FinanceCreditTracker({
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase block">Payment Credit Status</label>
-                        <select
+                        <CustomSelect
                           value={expStatus}
                           onChange={(e) => setExpStatus(e.target.value as any)}
                           className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -821,7 +822,7 @@ export default function FinanceCreditTracker({
                           <option value="paid">100% Fully Settled</option>
                           <option value="unpaid">100% On Supplier Credit</option>
                           <option value="partial">Partial Payment Made</option>
-                        </select>
+                        </CustomSelect>
                       </div>
 
                       {expStatus === 'partial' && (
@@ -1042,7 +1043,7 @@ export default function FinanceCreditTracker({
                   <form onSubmit={handleRecordPayment} className="space-y-3">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase block">Debtor Invoice Account</label>
-                      <select
+                      <CustomSelect
                         value={paymentIncomeId}
                         onChange={(e) => setPaymentIncomeId(e.target.value)}
                         className="mt-1 w-full text-xs px-2 px-3 py-2 border border-slate-200 rounded bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-600 text-slate-800"
@@ -1053,7 +1054,7 @@ export default function FinanceCreditTracker({
                             {deb.customerName} (Owed: ₦{deb.remainingBalance.toFixed(2)})
                           </option>
                         ))}
-                      </select>
+                      </CustomSelect>
                     </div>
 
                     <div>
@@ -1176,7 +1177,7 @@ export default function FinanceCreditTracker({
                       placeholder="Search customer name..."
                       className="text-xs px-2.5 py-1.5 border border-slate-200 rounded w-full sm:w-44 focus:ring-1 focus:ring-emerald-600 focus:outline-none bg-white"
                     />
-                    <select
+                    <CustomSelect
                       value={debtorStatusFilter}
                       onChange={(e) => setDebtorStatusFilter(e.target.value as any)}
                       className="text-xs px-2 py-1.5 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none"
@@ -1184,7 +1185,7 @@ export default function FinanceCreditTracker({
                       <option value="all">All Statuses</option>
                       <option value="outstanding">Outstanding Only</option>
                       <option value="settled">Settled Only</option>
-                    </select>
+                    </CustomSelect>
                     <button
                       type="button"
                       onClick={handleExportDebtorsToCSV}
@@ -1333,7 +1334,7 @@ export default function FinanceCreditTracker({
                   <form onSubmit={handleRecordSupplierPayment} className="space-y-3">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase block">Supplier Credit Account</label>
-                      <select
+                      <CustomSelect
                         value={paymentExpenseId}
                         required
                         onChange={(e) => setPaymentExpenseId(e.target.value)}
@@ -1345,7 +1346,7 @@ export default function FinanceCreditTracker({
                             {exp.supplierName} - {exp.category.toUpperCase()} (Owed: ₦{exp.remainingBalance.toFixed(2)})
                           </option>
                         ))}
-                      </select>
+                      </CustomSelect>
                     </div>
 
                     <div>
@@ -1464,7 +1465,7 @@ export default function FinanceCreditTracker({
                       placeholder="Search vendor or category..."
                       className="text-xs px-2.5 py-1.5 border border-slate-200 rounded w-full sm:w-44 focus:ring-1 focus:ring-red-600 focus:outline-none bg-white"
                     />
-                    <select
+                    <CustomSelect
                       value={supplierStatusFilter}
                       onChange={(e) => setSupplierStatusFilter(e.target.value as any)}
                       className="text-xs px-2 py-1.5 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none"
@@ -1472,7 +1473,7 @@ export default function FinanceCreditTracker({
                       <option value="all">All Statuses</option>
                       <option value="outstanding">Outstanding Only</option>
                       <option value="settled">Settled Only</option>
-                    </select>
+                    </CustomSelect>
                     <button
                       type="button"
                       onClick={handleExportSuppliersToCSV}

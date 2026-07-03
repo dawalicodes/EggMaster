@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Key, Plus, Trash, Edit, Shield, ShieldAlert, CheckCircle, UserPlus, Users, Lock } from 'lucide-react';
 import { User as UserType } from '../types';
 import { API_BASE } from '../utils/api';
+import CustomSelect from './CustomSelect';
 
 interface ProfileManagerProps {
   currentUser: UserType;
@@ -401,14 +402,14 @@ export default function ProfileManager({ currentUser, onProfileUpdate, onUsersCh
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Role & Privileges</label>
-                  <select
+                  <CustomSelect
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value as 'admin' | 'worker')}
                     className="mt-1.5 w-full text-xs px-3 py-2.5 border border-slate-200 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-850 font-semibold"
                   >
                     <option value="worker">Worker (Log entries only, no finance deletes)</option>
                     <option value="admin">Admin (Full administrative access)</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div className="md:col-span-2 pt-2">
@@ -599,14 +600,14 @@ export default function ProfileManager({ currentUser, onProfileUpdate, onUsersCh
 
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase block">Role Privileges</label>
-                    <select
+                    <CustomSelect
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value as 'admin' | 'worker')}
                       className="mt-1.5 w-full text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-650 text-slate-850 font-bold"
                     >
                       <option value="worker">Worker (Write logs, no finance deletes)</option>
                       <option value="admin">Admin (Full write/delete control)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <button

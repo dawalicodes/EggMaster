@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Calendar, PlusCircle, Bookmark, ClipboardList, CheckCircle } from 'lucide-react';
 import { VaccinationLog, Batch } from '../types';
+import CustomSelect from './CustomSelect';
 
 interface VaccinationTrackerProps {
   vaccinationLogs: VaccinationLog[];
@@ -91,7 +92,7 @@ export default function VaccinationTracker({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-500 block">Flock Batch</label>
-              <select
+              <CustomSelect
                 value={batchId}
                 onChange={(e) => setBatchId(e.target.value)}
                 className="mt-1 w-full text-xs px-2.5 py-2 border border-slate-200 bg-slate-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
@@ -101,7 +102,7 @@ export default function VaccinationTracker({
                 {batches.filter(b => b.status === 'active').map(b => (
                   <option key={b.id} value={b.id}>{b.name} ({b.currentCount} birds)</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div>

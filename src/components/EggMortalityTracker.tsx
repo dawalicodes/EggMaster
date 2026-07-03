@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Calendar, Layers, ShieldAlert, PlusCircle, Filter, Trash, Edit, Check } from 'lucide-react';
 import { DailyRecord, Batch, User } from '../types';
+import CustomSelect from './CustomSelect';
 
 interface EggMortalityTrackerProps {
   dailyRecords: DailyRecord[];
@@ -135,7 +136,7 @@ export default function EggMortalityTracker({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-500 block">Flock Batch</label>
-              <select
+              <CustomSelect
                 value={selectedBatchId}
                 onChange={(e) => setSelectedBatchId(e.target.value)}
                 className="mt-1 w-full text-xs px-2 px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:bg-white text-slate-800"
@@ -144,7 +145,7 @@ export default function EggMortalityTracker({
                 {batches.filter(b => b.status === 'active').map(b => (
                   <option key={b.id} value={b.id}>{b.name} ({b.currentCount} birds alive)</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div>
@@ -288,7 +289,7 @@ export default function EggMortalityTracker({
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          <select
+          <CustomSelect
             value={filterBatchId}
             onChange={(e) => setFilterBatchId(e.target.value)}
             className="text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none bg-slate-50 text-slate-800 font-medium"
@@ -297,7 +298,7 @@ export default function EggMortalityTracker({
             {batches.map(b => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
-          </select>
+          </CustomSelect>
 
           <input
             type="date"

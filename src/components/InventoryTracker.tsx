@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Plus, Package, Edit, Trash, AlertTriangle, HelpCircle } from 'lucide-react';
 import { FeedStock, InventoryItem, Supplier, User } from '../types';
+import CustomSelect from './CustomSelect';
 
 interface InventoryTrackerProps {
   feedStock: FeedStock[];
@@ -179,7 +180,7 @@ export default function InventoryTracker({
               <h3 className="text-xs font-bold text-slate-700 uppercase">Quick Feed Restock Entry</h3>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block">Feed Compound</label>
-                <select
+                <CustomSelect
                   value={restockFeedId}
                   onChange={(e) => setRestockFeedId(e.target.value)}
                   className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
@@ -189,7 +190,7 @@ export default function InventoryTracker({
                   {feedStock.map(f => (
                     <option key={f.id} value={f.id}>{f.name} (Now: {f.quantityBags} bags)</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block">Added Bags</label>
@@ -281,7 +282,7 @@ export default function InventoryTracker({
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase block">Primary Vendor</label>
-                    <select
+                    <CustomSelect
                       value={feedSupId}
                       onChange={(e) => setFeedSupId(e.target.value)}
                       className="mt-1 w-full text-xs px-2 py-1 border border-slate-200 bg-slate-50 rounded"
@@ -289,7 +290,7 @@ export default function InventoryTracker({
                       {suppliers.map(s => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 
@@ -409,7 +410,7 @@ export default function InventoryTracker({
               <h3 className="text-xs font-bold text-slate-700 uppercase">Quick General Restock</h3>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block">Select Item</label>
-                <select
+                <CustomSelect
                   value={restockItemId}
                   onChange={(e) => setRestockItemId(e.target.value)}
                   className="mt-1 w-full text-xs px-2 py-1 border border-slate-200 bg-slate-50 rounded"
@@ -419,7 +420,7 @@ export default function InventoryTracker({
                   {inventoryItems.map(item => (
                     <option key={item.id} value={item.id}>{item.name} ({item.quantity} {item.unit} left)</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block">Quantity Added</label>
@@ -469,7 +470,7 @@ export default function InventoryTracker({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase block">Category</label>
-                    <select
+                    <CustomSelect
                       value={itemCategory}
                       onChange={(e) => setItemCategory(e.target.value as any)}
                       className="mt-1 w-full text-xs px-2 py-1 border border-slate-200 bg-slate-50 rounded"
@@ -478,7 +479,7 @@ export default function InventoryTracker({
                       <option value="vaccines">Vaccines</option>
                       <option value="equipment">Coop Equipment</option>
                       <option value="other">Miscellaneous</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase block">Unit type</label>
