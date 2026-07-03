@@ -11,9 +11,10 @@ import { API_BASE } from '../utils/api';
 interface ProfileManagerProps {
   currentUser: UserType;
   onProfileUpdate: (updatedUser: UserType) => void;
+  onUsersChange?: (users: UserType[]) => void;
 }
 
-export default function ProfileManager({ currentUser, onProfileUpdate }: ProfileManagerProps) {
+export default function ProfileManager({ currentUser, onProfileUpdate, onUsersChange }: ProfileManagerProps) {
   const [usersList, setUsersList] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,6 +48,9 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
       if (response.ok) {
         const data = await response.json();
         setUsersList(data);
+        if (onUsersChange) {
+          onUsersChange(data);
+        }
       }
     } catch (err) {
       console.error('Failed to load users:', err);
@@ -73,6 +77,7 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
       const payload: any = {
         name: currName,
         username: currUsername,
+        requesterId: currentUser.id
       };
       if (currPassword.trim()) {
         payload.password = currPassword;
@@ -160,7 +165,8 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
       const payload: any = {
         name: editName,
         username: editUsername,
-        role: editRole
+        role: editRole,
+        requesterId: currentUser.id
       };
       if (editPassword.trim()) {
         payload.password = editPassword;
@@ -197,8 +203,12 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
     setSuccessMsg('');
 
     try {
-      const response = await fetch(`${API_BASE}/api/users/${id}`, {
-        method: 'DELETE'
+      const response = await fetch(`${API_BASE}/api/users/${id}/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ requesterId: currentUser.id })
       });
 
       const data = await response.json();
@@ -438,71 +448,92 @@ export default function ProfileManager({ currentUser, onProfileUpdate }: Profile
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                    {usersList.map(u => (
-                      <tr key={u.id} className="hover:bg-slate-50/40">
-                        <td className="px-3 py-3 font-semibold text-slate-800">
-                          <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">
-                              {u.name.substring(0, 2).toUpperCase()}
-                            </span>
-                            <span>{u.name} {u.id === currentUser.id && <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1 py-0.5 rounded font-sans ml-1">You</span>}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 font-mono text-slate-500">{u.username}</td>
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                            u.role === 'admin' 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
-                              : 'bg-amber-50 text-amber-700 border border-amber-100'
-                          }`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        {currentUser.role === 'admin' && (
-                          <td className="px-3 py-3 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => startEditingUser(u)}
-                                className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
-                                title="Edit Credentials/Role"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
+                    {usersList.map(u => {
+                      const isSuperAdmin = currentUser.username.toLowerCase() === 'vinci';
+                      const isTargetSuperAdmin = u.username.toLowerCase() === 'vinci';
+                      const isTargetAdmin = u.role === 'admin';
+                      const canDeleteTarget = u.id !== currentUser.id && !isTargetSuperAdmin && (!isTargetAdmin || isSuperAdmin);
+                      const canEditTarget = u.id === currentUser.id || isSuperAdmin || (!isTargetSuperAdmin && !isTargetAdmin);
 
-                              {u.id !== currentUser.id ? (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      if (deleteConfirmId === u.id) {
-                                        handleDeleteUser(u.id);
-                                      } else {
-                                        setDeleteConfirmId(u.id);
-                                        setTimeout(() => {
-                                          setDeleteConfirmId(prev => prev === u.id ? null : prev);
-                                        }, 4000);
-                                      }
-                                    }}
-                                    className={`p-1 rounded transition-all ${
-                                      deleteConfirmId === u.id 
-                                        ? 'text-red-600 bg-red-50 border border-red-150 animate-pulse'
-                                        : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
-                                    }`}
-                                    title={deleteConfirmId === u.id ? "Click again to confirm delete" : "Delete User Profile"}
-                                  >
-                                    <Trash className="w-3.5 h-3.5" />
-                                  </button>
-                                  {deleteConfirmId === u.id && (
-                                    <span className="text-[9px] font-bold text-rose-600 animate-pulse">Confirm?</span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-[10px] text-slate-300 italic px-1">Protected</span>
-                              )}
+                      return (
+                        <tr key={u.id} className="hover:bg-slate-50/40">
+                          <td className="px-3 py-3 font-semibold text-slate-800">
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">
+                                {u.name.substring(0, 2).toUpperCase()}
+                              </span>
+                              <span>{u.name} {u.id === currentUser.id && <span className="text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1 py-0.5 rounded font-sans ml-1">You</span>}</span>
                             </div>
                           </td>
-                        )}
-                      </tr>
-                    ))}
+                          <td className="px-3 py-3 font-mono text-slate-500">{u.username}</td>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              u.role === 'admin' 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                                : 'bg-amber-50 text-amber-700 border border-amber-100'
+                            }`}>
+                              {u.role}
+                            </span>
+                          </td>
+                          {currentUser.role === 'admin' && (
+                            <td className="px-3 py-3 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
+                                {canEditTarget ? (
+                                  <button
+                                    onClick={() => startEditingUser(u)}
+                                    className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                                    title="Edit Credentials/Role"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                ) : (
+                                  <span 
+                                    className="p-1 text-slate-300 cursor-not-allowed" 
+                                    title={isTargetSuperAdmin ? "Only the Farm Manager can edit the super admin account" : "Only the Farm Manager can edit other administrator accounts"}
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </span>
+                                )}
+
+                                {canDeleteTarget ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        if (deleteConfirmId === u.id) {
+                                          handleDeleteUser(u.id);
+                                        } else {
+                                          setDeleteConfirmId(u.id);
+                                          setTimeout(() => {
+                                            setDeleteConfirmId(prev => prev === u.id ? null : prev);
+                                          }, 4000);
+                                        }
+                                      }}
+                                      className={`p-1 rounded transition-all ${
+                                        deleteConfirmId === u.id 
+                                          ? 'text-red-600 bg-red-50 border border-red-150 animate-pulse'
+                                          : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                                      }`}
+                                      title={deleteConfirmId === u.id ? "Click again to confirm delete" : "Delete User Profile"}
+                                    >
+                                      <Trash className="w-3.5 h-3.5" />
+                                    </button>
+                                    {deleteConfirmId === u.id && (
+                                      <span className="text-[9px] font-bold text-rose-600 animate-pulse">Confirm?</span>
+                                    )}
+                                  </>
+                                ) : u.id === currentUser.id ? (
+                                  <span className="text-[10px] text-slate-300 italic px-1">Protected</span>
+                                ) : isTargetSuperAdmin ? (
+                                  <span className="text-[10px] text-amber-600 font-bold px-1" title="The Farm Manager super admin account cannot be deleted">Super Admin</span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 italic px-1" title="Only the Farm Manager (vinci) can delete other administrators">Admin Locked</span>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                     {usersList.length === 0 && (
                       <tr>
                         <td colSpan={currentUser.role === 'admin' ? 4 : 3} className="px-4 py-8 text-center text-slate-400">

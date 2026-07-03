@@ -122,4 +122,5 @@ export interface FarmBackupPayload {
   suppliers: Supplier[];
   creditPayments: CreditPayment[];
   vaccinationLogs: VaccinationLog[];
+  users?: User[];
 }

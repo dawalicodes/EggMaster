@@ -74,6 +74,19 @@ export default function App() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [creditPayments, setCreditPayments] = useState<CreditPayment[]>([]);
   const [vaccinationLogs, setVaccinationLogs] = useState<VaccinationLog[]>([]);
+  const [usersList, setUsersList] = useState<User[]>([]);
+
+  const fetchUsersList = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/users`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsersList(data);
+      }
+    } catch (err) {
+      console.error('Failed to load users list:', err);
+    }
+  };
 
   // Success Synclogs Alert messages
   const [syncStatusMsg, setSyncStatusMsg] = useState({ success: true, text: 'System ready.' });
@@ -114,6 +127,7 @@ export default function App() {
     setSuppliers(data.suppliers || []);
     setCreditPayments(data.creditPayments || []);
     setVaccinationLogs(data.vaccinationLogs || []);
+    setUsersList(data.users || []);
   };
 
   const getUnifiedPayload = (): FarmBackupPayload => {
@@ -883,6 +897,7 @@ export default function App() {
                   user={currentUser}
                   onAddRecord={handleAddRecord}
                   onDeleteRecord={handleDeleteRecord}
+                  usersList={usersList}
                 />
               )}
 
@@ -944,7 +959,9 @@ export default function App() {
                   onProfileUpdate={(updated) => {
                     setCurrentUser(updated);
                     sessionStorage.setItem('poultry_user', JSON.stringify(updated));
+                    fetchUsersList();
                   }}
+                  onUsersChange={fetchUsersList}
                 />
               )}
             </div>

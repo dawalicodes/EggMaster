@@ -13,6 +13,7 @@ interface EggMortalityTrackerProps {
   user: User | null;
   onAddRecord: (record: Omit<DailyRecord, 'id'>) => void;
   onDeleteRecord: (recordId: string) => void;
+  usersList?: User[];
 }
 
 export default function EggMortalityTracker({
@@ -20,7 +21,8 @@ export default function EggMortalityTracker({
   batches,
   user,
   onAddRecord,
-  onDeleteRecord
+  onDeleteRecord,
+  usersList = []
 }: EggMortalityTrackerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id || '');
@@ -383,7 +385,15 @@ export default function EggMortalityTracker({
                     </td>
                     <td className="px-3 py-3 sm:px-5 sm:py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2.5">
-                        <span className="text-[10px] text-slate-400 italic">By: {rec.createdBy === 'admin_user' || rec.createdBy === 'admin' ? 'Admin' : (rec.createdBy === 'worker_user' || rec.createdBy === 'worker' ? 'Worker' : rec.createdBy)}</span>
+                        <span className="text-[10px] text-slate-400 italic">By: {(() => {
+                          const matchedUser = usersList.find(u => u.id === rec.createdBy || u.username === rec.createdBy);
+                          if (matchedUser) {
+                            return matchedUser.username;
+                          }
+                          return rec.createdBy === 'admin_user' || rec.createdBy === 'admin'
+                            ? 'Admin'
+                            : (rec.createdBy === 'worker_user' || rec.createdBy === 'worker' ? 'Worker' : rec.createdBy);
+                        })()}</span>
                         {user?.role === 'admin' ? (
                           <div className="flex items-center gap-1">
                             {deleteConfirmId === rec.id && (

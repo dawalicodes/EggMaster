@@ -18,7 +18,7 @@ app.use('*', cors({
 
 // --- DATABASE HELPER SEED DATA ---
 const INITIAL_USERS = [
-  { id: 'admin_user', username: 'admin', name: 'Farm Manager Admin', role: 'admin', password: 'admin123' },
+  { id: 'admin_user', username: 'vinci', name: 'Farm Manager', role: 'admin', password: 'admin123' },
   { id: 'worker_user', username: 'worker', name: 'Farm Caretaker Worker', role: 'worker', password: 'worker123' }
 ];
 
@@ -377,11 +377,48 @@ app.post('/api/users', async (c) => {
 
 app.put('/api/users/:id', async (c) => {
   const id = c.req.param('id');
-  const { name, username, password, role } = await c.req.json() as any;
+  const body = await c.req.json() as any;
+  const { name, username, password, role, requesterId } = body;
 
   const user = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<any>();
   if (!user) {
     return c.json({ status: 'error', message: 'User not found.' }, 404);
+  }
+
+  // Resolve requester
+  let reqId = requesterId;
+  if (!reqId) {
+    reqId = c.req.query('requesterId') || c.req.header('x-requester-id');
+  }
+  const requester = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(reqId).first<any>();
+  if (!requester) {
+    return c.json({ status: 'error', message: 'Unauthorized. Requester credentials are required to update a user.' }, 403);
+  }
+
+  const isSelf = user.id === requester.id;
+  const isSuperAdmin = requester.username.toLowerCase() === 'vinci';
+  const isTargetSuperAdmin = user.username.toLowerCase() === 'vinci';
+  const isTargetAdmin = user.role === 'admin';
+
+  if (!isSelf && !isSuperAdmin) {
+    if (requester.role !== 'admin') {
+      return c.json({ status: 'error', message: 'Permission denied: Workers can only update their own profiles.' }, 403);
+    }
+    if (isTargetSuperAdmin) {
+      return c.json({ status: 'error', message: 'Permission denied: Only the super admin (Farm Manager "vinci") can edit the super admin account.' }, 403);
+    }
+    if (isTargetAdmin) {
+      return c.json({ status: 'error', message: 'Permission denied: Only the super admin (Farm Manager "vinci") can edit other administrator accounts.' }, 403);
+    }
+  }
+
+  if (isTargetSuperAdmin) {
+    if (username && username.toLowerCase() !== 'vinci') {
+      return c.json({ status: 'error', message: 'The super admin username must remain "vinci".' }, 400);
+    }
+    if (role && role !== 'admin') {
+      return c.json({ status: 'error', message: 'The super admin role cannot be changed.' }, 400);
+    }
   }
 
   if (username && username.toLowerCase() !== user.username.toLowerCase()) {
@@ -412,16 +449,103 @@ app.put('/api/users/:id', async (c) => {
 
 app.delete('/api/users/:id', async (c) => {
   const id = c.req.param('id');
-  const user = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<any>();
-  if (!user) {
+  
+  let requesterId = '';
+  try {
+    const body = await c.req.json();
+    requesterId = body?.requesterId || '';
+  } catch (e) {
+    // No JSON body
+  }
+  if (!requesterId) {
+    requesterId = c.req.query('requesterId') || c.req.header('x-requester-id') || '';
+  }
+
+  const targetUser = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<any>();
+  if (!targetUser) {
     return c.json({ status: 'error', message: 'User not found.' }, 404);
   }
 
-  if (user.role === 'admin') {
+  const requester = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(requesterId).first<any>();
+  if (!requester) {
+    return c.json({ status: 'error', message: 'Unauthorized. Requester credentials are required to delete a user profile.' }, 403);
+  }
+
+  if (targetUser.username.toLowerCase() === 'vinci') {
+    return c.json({ status: 'error', message: 'The Farm Manager super admin account ("vinci") cannot be deleted.' }, 400);
+  }
+
+  if (targetUser.role === 'admin') {
+    if (requester.username.toLowerCase() !== 'vinci') {
+      return c.json({ status: 'error', message: 'Permission denied: Only the super admin (Farm Manager "vinci") can delete other administrators.' }, 403);
+    }
     const adminsCount = await c.env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first<{ count: number }>();
     if (adminsCount && adminsCount.count <= 1) {
       return c.json({ status: 'error', message: 'Cannot delete the only remaining Administrator.' }, 400);
     }
+  }
+
+  if (targetUser.role === 'worker') {
+    if (requester.role !== 'admin') {
+      return c.json({ status: 'error', message: 'Permission denied: Only administrators can delete worker accounts.' }, 403);
+    }
+  }
+
+  if (targetUser.id === requester.id) {
+    return c.json({ status: 'error', message: 'You cannot delete your own logged-in user account.' }, 400);
+  }
+
+  await c.env.DB.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
+  return c.json({ status: 'success', message: 'User profile deleted.' });
+});
+
+// Firewall-friendly alternative to DELETE verb
+app.post('/api/users/:id/delete', async (c) => {
+  const id = c.req.param('id');
+  
+  let requesterId = '';
+  try {
+    const body = await c.req.json();
+    requesterId = body?.requesterId || '';
+  } catch (e) {
+    // No JSON body
+  }
+  if (!requesterId) {
+    requesterId = c.req.query('requesterId') || c.req.header('x-requester-id') || '';
+  }
+
+  const targetUser = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<any>();
+  if (!targetUser) {
+    return c.json({ status: 'error', message: 'User not found.' }, 404);
+  }
+
+  const requester = await c.env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(requesterId).first<any>();
+  if (!requester) {
+    return c.json({ status: 'error', message: 'Unauthorized. Requester credentials are required to delete a user profile.' }, 403);
+  }
+
+  if (targetUser.username.toLowerCase() === 'vinci') {
+    return c.json({ status: 'error', message: 'The Farm Manager super admin account ("vinci") cannot be deleted.' }, 400);
+  }
+
+  if (targetUser.role === 'admin') {
+    if (requester.username.toLowerCase() !== 'vinci') {
+      return c.json({ status: 'error', message: 'Permission denied: Only the super admin (Farm Manager "vinci") can delete other administrators.' }, 403);
+    }
+    const adminsCount = await c.env.DB.prepare("SELECT count(*) as count FROM users WHERE role = 'admin'").first<{ count: number }>();
+    if (adminsCount && adminsCount.count <= 1) {
+      return c.json({ status: 'error', message: 'Cannot delete the only remaining Administrator.' }, 400);
+    }
+  }
+
+  if (targetUser.role === 'worker') {
+    if (requester.role !== 'admin') {
+      return c.json({ status: 'error', message: 'Permission denied: Only administrators can delete worker accounts.' }, 403);
+    }
+  }
+
+  if (targetUser.id === requester.id) {
+    return c.json({ status: 'error', message: 'You cannot delete your own logged-in user account.' }, 400);
   }
 
   await c.env.DB.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
