@@ -1,6 +1,6 @@
 {
   "name": "Poultry Farm Management System",
-  "description": "A production-ready layer poultry farm management application to track daily egg production, bird mortality, feed consumption, financial income & expenses, and inventory.",
+  "description": "A comprehensive poultry farm management application to track layers and broilers, egg production, bird weight gain, FCR, mortality, feed inventory, and financial cash flow.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

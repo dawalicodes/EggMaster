@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS batches (
   dateAcquired TEXT NOT NULL,
   sourceSupplierId TEXT,
   ageWeeksAtAcquisition INTEGER NOT NULL,
+  flockType TEXT DEFAULT 'layer',
+  breed TEXT,
+  ageDaysAtAcquisition INTEGER,
+  targetWeightKg REAL,
+  targetAgeDays INTEGER,
   status TEXT NOT NULL,
   FOREIGN KEY (sourceSupplierId) REFERENCES suppliers(id)
 );
@@ -47,6 +52,10 @@ CREATE TABLE IF NOT EXISTS dailyRecords (
   mortalityCount INTEGER NOT NULL,
   mortalityCause TEXT,
   feedConsumedBags REAL NOT NULL,
+  feedConsumedKg REAL,
+  feedTypeUsed TEXT,
+  avgWeightKg REAL,
+  fcr REAL,
   notes TEXT,
   createdBy TEXT,
   FOREIGN KEY (batchId) REFERENCES batches(id),
@@ -57,6 +66,8 @@ CREATE TABLE IF NOT EXISTS dailyRecords (
 CREATE TABLE IF NOT EXISTS feedStock (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  category TEXT,
+  feedCategory TEXT,
   quantityBags REAL NOT NULL,
   unitCost REAL NOT NULL,
   lowStockThreshold REAL NOT NULL,
@@ -97,7 +108,12 @@ CREATE TABLE IF NOT EXISTS income (
   customerId TEXT,
   paymentStatus TEXT NOT NULL,
   amountPaid REAL NOT NULL,
-  FOREIGN KEY (customerId) REFERENCES customers(id)
+  batchId TEXT,
+  weightKg REAL,
+  totalWeightKg REAL,
+  saleUnit TEXT,
+  FOREIGN KEY (customerId) REFERENCES customers(id),
+  FOREIGN KEY (batchId) REFERENCES batches(id)
 );
 
 -- 10. Credit Payments Table

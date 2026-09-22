@@ -77,6 +77,22 @@ function getInitialData() {
       dateAcquired: getDateOffset(-80),
       sourceSupplierId: 'sup_1',
       ageWeeksAtAcquisition: 16,
+      flockType: 'layer',
+      status: 'active'
+    },
+    {
+      id: 'batch_3_broiler',
+      name: 'Cobb 500 Broiler Flock Pen 1',
+      initialCount: 500,
+      currentCount: 494, // 6 birds mortality over 4 weeks
+      dateAcquired: getDateOffset(-28),
+      sourceSupplierId: 'sup_1',
+      ageWeeksAtAcquisition: 0,
+      ageDaysAtAcquisition: 1,
+      flockType: 'broiler',
+      breed: 'Cobb 500',
+      targetWeightKg: 2.4,
+      targetAgeDays: 42,
       status: 'active'
     }
   ];
@@ -136,11 +152,39 @@ function getInitialData() {
       notes: '',
       createdBy: 'worker_user'
     });
+
+    // Batch 3: Cobb 500 Broilers
+    // Weight grows from ~0.95 kg (day 15) to ~1.96 kg today (day 29)
+    const broilerWeight = 0.95 + (progressFactor * 1.01);
+    const broilerFeedBags = 1.0 + (progressFactor * 0.45);
+    const broilerFCR = Number((1.32 + (progressFactor * 0.16)).toFixed(2));
+    const broilerMort = i === 3 ? 1 : i === 8 ? 1 : 0;
+
+    dailyRecords.push({
+      id: `record_${dateStr}_b3`,
+      date: dateStr,
+      batchId: 'batch_3_broiler',
+      eggsCollected: 0,
+      eggsBroken: 0,
+      eggsSpoilt: 0,
+      mortalityCount: broilerMort,
+      mortalityCause: broilerMort > 0 ? 'Ascites / water belly' : '',
+      feedConsumedBags: Number(broilerFeedBags.toFixed(2)),
+      feedConsumedKg: Number((broilerFeedBags * 50).toFixed(1)),
+      feedTypeUsed: i < 7 ? 'Broiler Starter Crumbles (50kg)' : 'Broiler Grower Pellets (50kg)',
+      avgWeightKg: Number(broilerWeight.toFixed(2)),
+      fcr: broilerFCR,
+      notes: i === 14 ? 'Day 29 sampling completed. Excellent growth rate.' : '',
+      createdBy: 'worker_user'
+    });
   }
 
   const feedStock = [
-    { id: 'feed_1', name: 'Layers Premium Mash (50kg)', quantityBags: 24.5, unitCost: 42.00, lowStockThreshold: 10, supplierId: 'sup_2' },
-    { id: 'feed_2', name: 'Growers Gold Mash (50kg)', quantityBags: 3.0, unitCost: 38.50, lowStockThreshold: 5, supplierId: 'sup_2' } // This triggers alert (3 < 5)
+    { id: 'feed_1', name: 'Layers Premium Mash (50kg)', quantityBags: 24.5, unitCost: 42.00, lowStockThreshold: 10, supplierId: 'sup_2', category: 'layer_mash', feedCategory: 'layer_mash' },
+    { id: 'feed_2', name: 'Growers Gold Mash (50kg)', quantityBags: 3.0, unitCost: 38.50, lowStockThreshold: 5, supplierId: 'sup_2', category: 'grower', feedCategory: 'grower' }, // This triggers alert (3 < 5)
+    { id: 'feed_3', name: 'Broiler Starter Crumbles (50kg)', quantityBags: 12.0, unitCost: 46.00, lowStockThreshold: 5, supplierId: 'sup_2', category: 'starter', feedCategory: 'starter' },
+    { id: 'feed_4', name: 'Broiler Grower Pellets (50kg)', quantityBags: 28.5, unitCost: 44.00, lowStockThreshold: 8, supplierId: 'sup_2', category: 'grower', feedCategory: 'grower' },
+    { id: 'feed_5', name: 'Broiler Finisher Pellets (50kg)', quantityBags: 35.0, unitCost: 43.00, lowStockThreshold: 10, supplierId: 'sup_2', category: 'finisher', feedCategory: 'finisher' }
   ];
 
   const inventoryItems = [
@@ -163,7 +207,8 @@ function getInitialData() {
     { id: 'inc_1', source: 'egg_sales', quantity: 50, unitPrice: 7.50, totalAmount: 375.00, date: getDateOffset(-11), customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 375.00 },
     { id: 'inc_2', source: 'egg_sales', quantity: 120, unitPrice: 7.20, totalAmount: 864.00, date: getDateOffset(-7), customerId: 'cust_2', paymentStatus: 'partial', amountPaid: 500.00 }, // Owed $364
     { id: 'inc_3', source: 'manure_sales', quantity: 30, unitPrice: 5.00, totalAmount: 150.00, date: getDateOffset(-4), customerId: 'cust_3', paymentStatus: 'paid', amountPaid: 150.00 },
-    { id: 'inc_4', source: 'egg_sales', quantity: 80, unitPrice: 7.50, totalAmount: 600.00, date: getDateOffset(-1), customerId: 'cust_1', paymentStatus: 'unpaid', amountPaid: 0.00 } // Owed $600
+    { id: 'inc_4', source: 'egg_sales', quantity: 80, unitPrice: 7.50, totalAmount: 600.00, date: getDateOffset(-1), customerId: 'cust_1', paymentStatus: 'unpaid', amountPaid: 0.00 }, // Owed $600
+    { id: 'inc_5', source: 'broiler_meat_sales', quantity: 30, unitPrice: 12.00, totalAmount: 684.00, totalWeightKg: 57, weightKg: 57, saleUnit: 'per_kg', batchId: 'batch_3_broiler', date: getDateOffset(0), customerId: 'cust_1', paymentStatus: 'paid', amountPaid: 684.00 }
   ];
 
   const creditPayments = [

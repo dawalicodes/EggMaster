@@ -1,0 +1,832 @@
+{
+  "batches": [
+    {
+      "id": "batch_1",
+      "name": "Lohmann Brown Batch A",
+      "initialCount": 1000,
+      "currentCount": 986,
+      "dateAcquired": "2026-01-25",
+      "sourceSupplierId": "sup_1",
+      "ageWeeksAtAcquisition": 18,
+      "flockType": "layer",
+      "status": "active"
+    },
+    {
+      "id": "batch_2",
+      "name": "Hy-Line Silver Batch B",
+      "initialCount": 800,
+      "currentCount": 798,
+      "dateAcquired": "2026-07-04",
+      "sourceSupplierId": "sup_1",
+      "ageWeeksAtAcquisition": 16,
+      "flockType": "layer",
+      "status": "active"
+    },
+    {
+      "id": "batch_3_broiler",
+      "name": "Cobb 500 Broiler Flock Pen 1",
+      "flockType": "broiler",
+      "breed": "Cobb 500",
+      "initialCount": 500,
+      "currentCount": 494,
+      "dateAcquired": "2026-08-25",
+      "sourceSupplierId": "sup_1",
+      "ageWeeksAtAcquisition": 0,
+      "ageDaysAtAcquisition": 1,
+      "targetWeightKg": 2.4,
+      "targetAgeDays": 42,
+      "status": "active"
+    }
+  ],
+  "dailyRecords": [
+    {
+      "id": "record_2026-09-08_b1",
+      "date": "2026-09-08",
+      "batchId": "batch_1",
+      "eggsCollected": 904,
+      "eggsBroken": 11,
+      "eggsSpoilt": 4,
+      "mortalityCount": 1,
+      "mortalityCause": "Egg bound",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-08_b2",
+      "date": "2026-09-08",
+      "batchId": "batch_2",
+      "eggsCollected": 122,
+      "eggsBroken": 2,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.8,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-09_b1",
+      "date": "2026-09-09",
+      "batchId": "batch_1",
+      "eggsCollected": 907,
+      "eggsBroken": 14,
+      "eggsSpoilt": 4,
+      "mortalityCount": 1,
+      "mortalityCause": "Egg bound",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-09_b2",
+      "date": "2026-09-09",
+      "batchId": "batch_2",
+      "eggsCollected": 135,
+      "eggsBroken": 6,
+      "eggsSpoilt": 1,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.83,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-10_b1",
+      "date": "2026-09-10",
+      "batchId": "batch_1",
+      "eggsCollected": 889,
+      "eggsBroken": 11,
+      "eggsSpoilt": 2,
+      "mortalityCount": 1,
+      "mortalityCause": "Egg bound",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-10_b2",
+      "date": "2026-09-10",
+      "batchId": "batch_2",
+      "eggsCollected": 176,
+      "eggsBroken": 6,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.86,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-11_b1",
+      "date": "2026-09-11",
+      "batchId": "batch_1",
+      "eggsCollected": 894,
+      "eggsBroken": 11,
+      "eggsSpoilt": 4,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-11_b2",
+      "date": "2026-09-11",
+      "batchId": "batch_2",
+      "eggsCollected": 200,
+      "eggsBroken": 6,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.89,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-12_b1",
+      "date": "2026-09-12",
+      "batchId": "batch_1",
+      "eggsCollected": 881,
+      "eggsBroken": 13,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-12_b2",
+      "date": "2026-09-12",
+      "batchId": "batch_2",
+      "eggsCollected": 212,
+      "eggsBroken": 5,
+      "eggsSpoilt": 2,
+      "mortalityCount": 1,
+      "mortalityCause": "Normal culling",
+      "feedConsumedBags": 1.91,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-13_b1",
+      "date": "2026-09-13",
+      "batchId": "batch_1",
+      "eggsCollected": 881,
+      "eggsBroken": 11,
+      "eggsSpoilt": 5,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-13_b2",
+      "date": "2026-09-13",
+      "batchId": "batch_2",
+      "eggsCollected": 241,
+      "eggsBroken": 5,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.94,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-14_b1",
+      "date": "2026-09-14",
+      "batchId": "batch_1",
+      "eggsCollected": 883,
+      "eggsBroken": 10,
+      "eggsSpoilt": 3,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-14_b2",
+      "date": "2026-09-14",
+      "batchId": "batch_2",
+      "eggsCollected": 266,
+      "eggsBroken": 2,
+      "eggsSpoilt": 1,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.97,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-15_b1",
+      "date": "2026-09-15",
+      "batchId": "batch_1",
+      "eggsCollected": 909,
+      "eggsBroken": 11,
+      "eggsSpoilt": 2,
+      "mortalityCount": 1,
+      "mortalityCause": "Heat stress",
+      "feedConsumedBags": 2.5,
+      "notes": "Routine coop disinfection carried out",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-15_b2",
+      "date": "2026-09-15",
+      "batchId": "batch_2",
+      "eggsCollected": 291,
+      "eggsBroken": 2,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-16_b1",
+      "date": "2026-09-16",
+      "batchId": "batch_1",
+      "eggsCollected": 914,
+      "eggsBroken": 17,
+      "eggsSpoilt": 4,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-16_b2",
+      "date": "2026-09-16",
+      "batchId": "batch_2",
+      "eggsCollected": 314,
+      "eggsBroken": 3,
+      "eggsSpoilt": 1,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.03,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-17_b1",
+      "date": "2026-09-17",
+      "batchId": "batch_1",
+      "eggsCollected": 899,
+      "eggsBroken": 12,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-17_b2",
+      "date": "2026-09-17",
+      "batchId": "batch_2",
+      "eggsCollected": 341,
+      "eggsBroken": 3,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.06,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-18_b1",
+      "date": "2026-09-18",
+      "batchId": "batch_1",
+      "eggsCollected": 891,
+      "eggsBroken": 11,
+      "eggsSpoilt": 4,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-18_b2",
+      "date": "2026-09-18",
+      "batchId": "batch_2",
+      "eggsCollected": 378,
+      "eggsBroken": 3,
+      "eggsSpoilt": 1,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.09,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-19_b1",
+      "date": "2026-09-19",
+      "batchId": "batch_1",
+      "eggsCollected": 896,
+      "eggsBroken": 14,
+      "eggsSpoilt": 5,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-19_b2",
+      "date": "2026-09-19",
+      "batchId": "batch_2",
+      "eggsCollected": 404,
+      "eggsBroken": 3,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.11,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-20_b1",
+      "date": "2026-09-20",
+      "batchId": "batch_1",
+      "eggsCollected": 905,
+      "eggsBroken": 12,
+      "eggsSpoilt": 5,
+      "mortalityCount": 1,
+      "mortalityCause": "Heat stress",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-20_b2",
+      "date": "2026-09-20",
+      "batchId": "batch_2",
+      "eggsCollected": 422,
+      "eggsBroken": 4,
+      "eggsSpoilt": 2,
+      "mortalityCount": 1,
+      "mortalityCause": "Normal culling",
+      "feedConsumedBags": 2.14,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-21_b1",
+      "date": "2026-09-21",
+      "batchId": "batch_1",
+      "eggsCollected": 898,
+      "eggsBroken": 11,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-21_b2",
+      "date": "2026-09-21",
+      "batchId": "batch_2",
+      "eggsCollected": 443,
+      "eggsBroken": 2,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.17,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-22_b1",
+      "date": "2026-09-22",
+      "batchId": "batch_1",
+      "eggsCollected": 892,
+      "eggsBroken": 11,
+      "eggsSpoilt": 4,
+      "mortalityCount": 1,
+      "mortalityCause": "Heat stress",
+      "feedConsumedBags": 2.5,
+      "notes": "",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-22_b2",
+      "date": "2026-09-22",
+      "batchId": "batch_2",
+      "eggsCollected": 469,
+      "eggsBroken": 6,
+      "eggsSpoilt": 2,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 2.2,
+      "notes": "",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-15_b3",
+      "date": "2026-09-15",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 1,
+      "mortalityCause": "Weak runt culled",
+      "feedConsumedBags": 1.1,
+      "feedConsumedKg": 55,
+      "feedTypeUsed": "Broiler Starter Crumbles (50kg)",
+      "avgWeightKg": 1.08,
+      "fcr": 1.34,
+      "notes": "Day 22. Healthy appetite, active flock.",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-16_b3",
+      "date": "2026-09-16",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.15,
+      "feedConsumedKg": 57.5,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.19,
+      "fcr": 1.36,
+      "notes": "Transitioning to grower pellets smoothly.",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-17_b3",
+      "date": "2026-09-17",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 1,
+      "mortalityCause": "Ascites / water belly",
+      "feedConsumedBags": 1.2,
+      "feedConsumedKg": 60,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.31,
+      "fcr": 1.38,
+      "notes": "Ventilation fans checked and increased.",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-18_b3",
+      "date": "2026-09-18",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.25,
+      "feedConsumedKg": 62.5,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.43,
+      "fcr": 1.41,
+      "notes": "Fast growth observed across pen.",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-19_b3",
+      "date": "2026-09-19",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.3,
+      "feedConsumedKg": 65,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.56,
+      "fcr": 1.43,
+      "notes": "Body confirmation solid, breast muscles developing well.",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-20_b3",
+      "date": "2026-09-20",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.35,
+      "feedConsumedKg": 67.5,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.69,
+      "fcr": 1.45,
+      "notes": "Water intake normal, litter clean and dry.",
+      "createdBy": "admin_user"
+    },
+    {
+      "id": "record_2026-09-21_b3",
+      "date": "2026-09-21",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.4,
+      "feedConsumedKg": 70,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.83,
+      "fcr": 1.46,
+      "notes": "Sampling 25 birds weighed. Sample average 1.83 kg.",
+      "createdBy": "worker_user"
+    },
+    {
+      "id": "record_2026-09-22_b3",
+      "date": "2026-09-22",
+      "batchId": "batch_3_broiler",
+      "eggsCollected": 0,
+      "eggsBroken": 0,
+      "eggsSpoilt": 0,
+      "mortalityCount": 0,
+      "mortalityCause": "",
+      "feedConsumedBags": 1.45,
+      "feedConsumedKg": 72.5,
+      "feedTypeUsed": "Broiler Grower Pellets (50kg)",
+      "avgWeightKg": 1.96,
+      "fcr": 1.48,
+      "notes": "Day 29 check. Average bird weight reached 1.96 kg towards 2.40 kg target.",
+      "createdBy": "admin_user"
+    }
+  ],
+  "feedStock": [
+    {
+      "id": "feed_1",
+      "name": "Layers Premium Mash (50kg)",
+      "quantityBags": 24.5,
+      "unitCost": 42,
+      "lowStockThreshold": 10,
+      "supplierId": "sup_2",
+      "category": "layer_mash",
+      "feedCategory": "layer_mash"
+    },
+    {
+      "id": "feed_2",
+      "name": "Growers Gold Mash (50kg)",
+      "quantityBags": 3,
+      "unitCost": 38.5,
+      "lowStockThreshold": 5,
+      "supplierId": "sup_2",
+      "category": "grower",
+      "feedCategory": "grower"
+    },
+    {
+      "id": "feed_3",
+      "name": "Broiler Starter Crumbles (50kg)",
+      "quantityBags": 12.0,
+      "unitCost": 46,
+      "lowStockThreshold": 5,
+      "supplierId": "sup_2",
+      "category": "starter",
+      "feedCategory": "starter"
+    },
+    {
+      "id": "feed_4",
+      "name": "Broiler Grower Pellets (50kg)",
+      "quantityBags": 28.5,
+      "unitCost": 44,
+      "lowStockThreshold": 8,
+      "supplierId": "sup_2",
+      "category": "grower",
+      "feedCategory": "grower"
+    },
+    {
+      "id": "feed_5",
+      "name": "Broiler Finisher Pellets (50kg)",
+      "quantityBags": 35.0,
+      "unitCost": 43,
+      "lowStockThreshold": 10,
+      "supplierId": "sup_2",
+      "category": "finisher",
+      "feedCategory": "finisher"
+    }
+  ],
+  "inventoryItems": [
+    {
+      "id": "inv_1",
+      "name": "Plastic Egg Crates (30-egg size)",
+      "category": "equipment",
+      "quantity": 180,
+      "unit": "crates",
+      "unitCost": 3.5,
+      "lowStockThreshold": 50
+    },
+    {
+      "id": "inv_2",
+      "name": "Newcastle Disease Vaccine (G7)",
+      "category": "vaccines",
+      "quantity": 4,
+      "unit": "vials",
+      "unitCost": 15,
+      "lowStockThreshold": 2
+    },
+    {
+      "id": "inv_3",
+      "name": "Broad Spectrum Antibiotic powder",
+      "category": "drugs",
+      "quantity": 1,
+      "unit": "packets",
+      "unitCost": 22,
+      "lowStockThreshold": 3
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_1",
+      "category": "feed",
+      "amount": 840,
+      "date": "2026-09-03",
+      "notes": "Purchased 20 bags Layers Mash",
+      "batchId": ""
+    },
+    {
+      "id": "exp_2",
+      "category": "medication",
+      "amount": 60,
+      "date": "2026-09-05",
+      "notes": "Newcastle vaccines + booster vitamins",
+      "batchId": "batch_1"
+    },
+    {
+      "id": "exp_3",
+      "category": "labor",
+      "amount": 350,
+      "date": "2026-09-08",
+      "notes": "Bi-weekly farm helper salary",
+      "batchId": ""
+    },
+    {
+      "id": "exp_4",
+      "category": "transport",
+      "amount": 75,
+      "date": "2026-09-13",
+      "notes": "Delivery cost for egg crates and tools",
+      "batchId": ""
+    },
+    {
+      "id": "exp_5",
+      "category": "feed",
+      "amount": 385,
+      "date": "2026-09-17",
+      "notes": "10 bags growers mash",
+      "batchId": "batch_2"
+    }
+  ],
+  "income": [
+    {
+      "id": "inc_1",
+      "source": "egg_sales",
+      "quantity": 50,
+      "unitPrice": 7.5,
+      "totalAmount": 375,
+      "date": "2026-09-11",
+      "customerId": "cust_1",
+      "paymentStatus": "paid",
+      "amountPaid": 375
+    },
+    {
+      "id": "inc_2",
+      "source": "egg_sales",
+      "quantity": 120,
+      "unitPrice": 7.2,
+      "totalAmount": 864,
+      "date": "2026-09-15",
+      "customerId": "cust_2",
+      "paymentStatus": "partial",
+      "amountPaid": 500
+    },
+    {
+      "id": "inc_3",
+      "source": "manure_sales",
+      "quantity": 30,
+      "unitPrice": 5,
+      "totalAmount": 150,
+      "date": "2026-09-18",
+      "customerId": "cust_3",
+      "paymentStatus": "paid",
+      "amountPaid": 150
+    },
+    {
+      "id": "inc_4",
+      "source": "egg_sales",
+      "quantity": 80,
+      "unitPrice": 7.5,
+      "totalAmount": 600,
+      "date": "2026-09-21",
+      "customerId": "cust_1",
+      "paymentStatus": "unpaid",
+      "amountPaid": 0
+    },
+    {
+      "id": "inc_5",
+      "source": "broiler_meat_sales",
+      "quantity": 30,
+      "unitPrice": 12,
+      "totalAmount": 684,
+      "totalWeightKg": 57,
+      "weightKg": 57,
+      "saleUnit": "per_kg",
+      "batchId": "batch_3_broiler",
+      "date": "2026-09-22",
+      "customerId": "cust_1",
+      "paymentStatus": "paid",
+      "amountPaid": 684
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust_1",
+      "name": "Metro Fresh Supermarkets",
+      "contact": "+1 (555) 017-8822"
+    },
+    {
+      "id": "cust_2",
+      "name": "Central Egg Distributors",
+      "contact": "+1 (555) 018-4933"
+    },
+    {
+      "id": "cust_3",
+      "name": "Organic Barn Wholesalers",
+      "contact": "+1 (555) 011-3040"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "sup_1",
+      "name": "Golden Chicks Hatchery Ltd",
+      "contact": "+1 (555) 019-2831"
+    },
+    {
+      "id": "sup_2",
+      "name": "Vitality Feeds & Nutrition",
+      "contact": "+1 (555) 012-9844"
+    },
+    {
+      "id": "sup_3",
+      "name": "Avian Vet Care Supplies",
+      "contact": "+1 (555) 014-4321"
+    }
+  ],
+  "creditPayments": [
+    {
+      "id": "pmt_1",
+      "incomeId": "inc_2",
+      "amountPaid": 500,
+      "date": "2026-09-15",
+      "notes": "First instalment for wholesale egg order"
+    }
+  ],
+  "vaccinationLogs": [
+    {
+      "id": "vac_1",
+      "batchId": "batch_1",
+      "vaccineOrDrugName": "Newcastle G7 Vaccine",
+      "dateAdministered": "2026-08-26",
+      "nextDueDate": "2026-09-25",
+      "dosage": "0.2ml/bird via drops",
+      "notes": "Administered under Vet guidance"
+    },
+    {
+      "id": "vac_2",
+      "batchId": "batch_2",
+      "vaccineOrDrugName": "Gumboro Booster vaccine",
+      "dateAdministered": "2026-09-11",
+      "nextDueDate": "2026-10-11",
+      "dosage": "Water dilution",
+      "notes": "All birds vaccinated successfully"
+    }
+  ],
+  "users": [
+    {
+      "id": "admin_user",
+      "username": "vinci",
+      "name": "Farm Manager",
+      "role": "admin",
+      "password": "$2b$10$wosAz/mI/Rti0LPov90JJOw0OxtFtxCp1YRUB3ApcSSh95VeOFA/2"
+    },
+    {
+      "id": "worker_user",
+      "username": "worker",
+      "name": "Farm Caretaker Worker",
+      "role": "worker",
+      "password": "$2b$10$9WP35w3BpVZ7.wQ9hwjnduvS6v/ZWSkCHgRcv/.2nCXhhDhKssPUa"
+    }
+  ]
+}

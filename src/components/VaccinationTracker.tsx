@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Calendar, PlusCircle, Bookmark, ClipboardList, CheckCircle } from 'lucide-react';
 import { VaccinationLog, Batch } from '../types';
 import CustomSelect from './CustomSelect';
+import { getLocalDateString } from '../utils/date';
 
 interface VaccinationTrackerProps {
   vaccinationLogs: VaccinationLog[];
@@ -22,7 +23,7 @@ export default function VaccinationTracker({
   const [showAddForm, setShowAddForm] = useState(false);
   const [batchId, setBatchId] = useState(batches[0]?.id || '');
   const [vaccineName, setVaccineName] = useState('');
-  const [dateAdministered, setDateAdministered] = useState(new Date().toISOString().split('T')[0]);
+  const [dateAdministered, setDateAdministered] = useState(getLocalDateString());
   const [nextDueDate, setNextDueDate] = useState('');
   const [dosage, setDosage] = useState('');
   const [notes, setNotes] = useState('');

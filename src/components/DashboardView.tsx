@@ -18,6 +18,7 @@ import {
   Bell
 } from 'lucide-react';
 import { Batch, DailyRecord, FeedStock, InventoryItem, Expense, Income, VaccinationLog } from '../types';
+import { getLocalDateString } from '../utils/date';
 
 interface DashboardViewProps {
   batches: Batch[];
@@ -44,23 +45,35 @@ export default function DashboardView({
   // --- 1. CORE CALCULATIONS ---
   // Active Batches & Birds
   const activeBatches = batches.filter(b => b.status === 'active');
+  const activeLayerBatches = activeBatches.filter(b => b.flockType !== 'broiler');
+  const activeBroilerBatches = activeBatches.filter(b => b.flockType === 'broiler');
   const totalBirdsAlive = activeBatches.reduce((val, b) => val + b.currentCount, 0);
+  const totalLayersAlive = activeLayerBatches.reduce((val, b) => val + b.currentCount, 0);
+  const totalBroilersAlive = activeBroilerBatches.reduce((val, b) => val + b.currentCount, 0);
 
-  // Latest production date available
+  // Today's actual date in local timezone
+  const todayDate = getLocalDateString();
+
+  // Latest production date available (used for historic production-related alerts)
   const sortedRecords = [...dailyRecords].sort((a, b) => b.date.localeCompare(a.date));
-  const latestDate = sortedRecords.length > 0 ? sortedRecords[0].date : new Date().toISOString().split('T')[0];
+  const latestDate = sortedRecords.length > 0 ? sortedRecords[0].date : todayDate;
 
   // Filter latest records (of all batches)
   const latestBatchRecords = dailyRecords.filter(r => r.date === latestDate);
-  const eggsCollectedToday = latestBatchRecords.reduce((acc, r) => acc + r.eggsCollected, 0);
-  const eggsBrokenToday = latestBatchRecords.reduce((acc, r) => acc + r.eggsBroken, 0);
-  const eggsSpoiltToday = latestBatchRecords.reduce((acc, r) => acc + r.eggsSpoilt, 0);
-  const mortalityToday = latestBatchRecords.reduce((acc, r) => acc + r.mortalityCount, 0);
-  const feedToday = latestBatchRecords.reduce((acc, r) => acc + r.feedConsumedBags, 0);
 
-  // Financial calculations for "Today" (latest date)
-  const incomeToday = income.filter(i => i.date === latestDate).reduce((acc, i) => acc + i.totalAmount, 0);
-  const expensesToday = expenses.filter(e => e.date === latestDate).reduce((acc, e) => acc + e.amount, 0);
+  // Filter today's records (of all batches) for dashboard counts
+  const todayBatchRecords = dailyRecords.filter(r => r.date === todayDate);
+  const eggsCollectedToday = todayBatchRecords.reduce((acc, r) => acc + r.eggsCollected, 0);
+  const eggsBrokenToday = todayBatchRecords.reduce((acc, r) => acc + r.eggsBroken, 0);
+  const eggsSpoiltToday = todayBatchRecords.reduce((acc, r) => acc + r.eggsSpoilt, 0);
+  const mortalityToday = todayBatchRecords.reduce((acc, r) => acc + r.mortalityCount, 0);
+  const feedToday = todayBatchRecords.reduce((acc, r) => acc + r.feedConsumedBags, 0);
+  const feedKgToday = todayBatchRecords.reduce((acc, r) => acc + (r.feedConsumedKg || 0), 0);
+  const latestFeed = latestBatchRecords.reduce((acc, r) => acc + r.feedConsumedBags, 0);
+
+  // Financial calculations for "Today" (actual calendar today)
+  const incomeToday = income.filter(i => i.date === todayDate).reduce((acc, i) => acc + i.totalAmount, 0);
+  const expensesToday = expenses.filter(e => e.date === todayDate).reduce((acc, e) => acc + e.amount, 0);
   const profitToday = incomeToday - expensesToday;
 
   // --- 2. ALERT TRIGGERS ---
@@ -159,9 +172,8 @@ export default function DashboardView({
   const prodTrend = uniqueDatesSorted.map(dName => {
     const recsOnDate = dailyRecords.filter(r => r.date === dName);
     const totalCollected = recsOnDate.reduce((s, r) => s + r.eggsCollected, 0);
-    // Find live birds corresponding to active batches on that date.
-    // For simplicity, we use total current counts
-    const totalFlockSize = activeBatches.reduce((s, b) => s + b.currentCount, 0);
+    // Find live birds corresponding to active layer batches on that date
+    const totalFlockSize = totalLayersAlive;
     const percentage = totalFlockSize > 0 ? (totalCollected / totalFlockSize) * 100 : 0;
     return {
       label: dName.substring(5), // Show MM-DD
@@ -347,13 +359,13 @@ export default function DashboardView({
             {/* Birds Card */}
             <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col justify-between">
               <span className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">
-                Flocks
+                Total Live Birds
               </span>
               <span className="text-xl font-bold mt-2 text-slate-800 font-display">
                 {totalBirdsAlive.toLocaleString()} <span className="text-xs text-slate-400 font-sans">birds</span>
               </span>
               <span className="text-[10px] text-slate-500 mt-1 block">
-                Across {activeBatches.length} active batches
+                {totalLayersAlive.toLocaleString()} Layers &bull; {totalBroilersAlive.toLocaleString()} Broilers ({activeBatches.length} active)
               </span>
             </div>
 
@@ -400,14 +412,30 @@ export default function DashboardView({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Feed Consumption */}
             <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs">
-              <span className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider block">Today's Feed Intake</span>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider block">Today's Feed Intake</span>
+                <span className="text-[9px] font-medium text-slate-400">{todayDate}</span>
+              </div>
               <div className="flex items-baseline justify-between mt-2">
                 <span className="text-lg font-bold text-slate-800 font-display">
-                  {Math.round(feedToday)} <span className="text-xs text-slate-400 font-sans">bags consumed</span>
+                  {feedToday > 0 ? (
+                    <>
+                      {feedToday.toFixed(1)} <span className="text-xs text-slate-400 font-sans">bags</span>
+                      {feedKgToday > 0 && <span className="text-xs text-emerald-600 font-sans ml-1">({feedKgToday} kg)</span>}
+                    </>
+                  ) : (
+                    <>
+                      0 <span className="text-xs text-slate-400 font-sans">bags today</span>
+                    </>
+                  )}
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 mt-2">
-                Overall feeding conversion average: <span className="font-bold text-slate-700">{eggsCollectedToday > 0 ? (feedToday / (eggsCollectedToday / 30)).toFixed(2) : '0.0'} bags/crate</span>
+                {feedToday > 0 ? (
+                  <>Conversion: <span className="font-bold text-slate-700">{eggsCollectedToday > 0 ? (feedToday / (eggsCollectedToday / 30)).toFixed(2) : '0.0'} bags/crate</span></>
+                ) : (
+                  <>Latest entry: <span className="font-bold text-slate-700">{latestFeed.toFixed(1)} bags on {latestDate}</span></>
+                )}
               </p>
             </div>
 
@@ -440,6 +468,67 @@ export default function DashboardView({
               </p>
             </div>
           </div>
+
+          {/* Broiler Flocks Live Status Banner */}
+          {activeBroilerBatches.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-xl p-4 shadow-3xs">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+                    Active Broiler Flocks ({activeBroilerBatches.length})
+                  </h3>
+                </div>
+                <span className="text-[10px] text-amber-700 font-semibold">Meat & Weight Performance</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                {activeBroilerBatches.map(bb => {
+                  const bRecords = dailyRecords.filter(r => r.batchId === bb.id).sort((a, b) => b.date.localeCompare(a.date));
+                  const latestRec = bRecords[0];
+                  // Calculate days in pen
+                  const acquisitionDate = new Date(bb.dateAcquired).getTime();
+                  const now = new Date(todayDate).getTime();
+                  const daysElapsed = Math.max(0, Math.floor((now - acquisitionDate) / (1000 * 60 * 60 * 24))) + (bb.ageDaysAtAcquisition || 1);
+                  const targetDays = bb.targetAgeDays || 42;
+                  const progressPct = Math.min(100, Math.round((daysElapsed / targetDays) * 100));
+
+                  return (
+                    <div key={bb.id} className="bg-white/90 border border-amber-100 rounded-lg p-3 text-xs">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-bold text-slate-800">{bb.name}</div>
+                          <div className="text-[10px] text-slate-500">{bb.breed || 'Broiler'} &bull; {bb.currentCount.toLocaleString()} birds</div>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${daysElapsed >= targetDays ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {daysElapsed >= targetDays ? 'Market Ready' : `Day ${daysElapsed} of ${targetDays}`}
+                        </span>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-100 text-[10px]">
+                        <div>
+                          <span className="text-slate-400 block">Avg Weight:</span>
+                          <span className="font-bold text-slate-700">{latestRec?.avgWeightKg ? `${latestRec.avgWeightKg} kg` : 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Target:</span>
+                          <span className="font-bold text-slate-700">{bb.targetWeightKg ? `${bb.targetWeightKg} kg` : '2.2 kg'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Live FCR:</span>
+                          <span className="font-bold text-emerald-700">{latestRec?.fcr ? latestRec.fcr.toFixed(2) : '1.48'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Live Alerts Stream */}

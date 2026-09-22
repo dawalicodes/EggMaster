@@ -47,10 +47,12 @@ export default function InventoryTracker({
   // Addition states for Feed
   const [showFeedForm, setShowFeedForm] = useState(false);
   const [feedName, setFeedName] = useState('');
+  const [feedCategory, setFeedCategory] = useState<'starter' | 'grower' | 'finisher' | 'layer_mash' | 'other'>('starter');
   const [feedQty, setFeedQty] = useState<number>(10);
   const [feedCost, setFeedCost] = useState<number>(42);
   const [feedThreshold, setFeedThreshold] = useState<number>(5);
   const [feedSupId, setFeedSupId] = useState(suppliers[0]?.id || '');
+  const [feedFilter, setFeedFilter] = useState<'all' | 'broiler' | 'layer'>('all');
 
   // Addition states for Items
   const [showItemForm, setShowItemForm] = useState(false);
@@ -77,6 +79,7 @@ export default function InventoryTracker({
     if (!feedName.trim()) return;
     onAddNewFeed({
       name: feedName,
+      category: feedCategory,
       quantityBags: feedQty,
       unitCost: feedCost,
       lowStockThreshold: feedThreshold,
@@ -231,6 +234,58 @@ export default function InventoryTracker({
             ) : (
               <form onSubmit={handleCreateFeed} className="bg-white p-4 rounded-xl border border-emerald-300 shadow-xs space-y-3">
                 <h3 className="text-xs font-bold text-emerald-700 uppercase">New Feed Formula Schema</h3>
+
+                {/* Quick Presets for broiler and layer feed compounds */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Quick Poultry Presets</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeedName('Broiler Starter Crumble (23% CP)');
+                        setFeedCategory('starter');
+                        setFeedThreshold(10);
+                      }}
+                      className="px-2 py-1 text-[10px] text-left font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 rounded border border-amber-200 transition-colors"
+                    >
+                      🍗 Broiler Starter (0-2 Wks)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeedName('Broiler Grower Pellets (20% CP)');
+                        setFeedCategory('grower');
+                        setFeedThreshold(10);
+                      }}
+                      className="px-2 py-1 text-[10px] text-left font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 rounded border border-amber-200 transition-colors"
+                    >
+                      🍗 Broiler Grower (2-4 Wks)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeedName('Broiler Finisher Pellets (18% CP)');
+                        setFeedCategory('finisher');
+                        setFeedThreshold(10);
+                      }}
+                      className="px-2 py-1 text-[10px] text-left font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 rounded border border-amber-200 transition-colors"
+                    >
+                      🍗 Broiler Finisher (4+ Wks)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeedName('Layer Phase 1 Production Mash');
+                        setFeedCategory('layer_mash');
+                        setFeedThreshold(15);
+                      }}
+                      className="px-2 py-1 text-[10px] text-left font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-900 rounded border border-emerald-200 transition-colors"
+                    >
+                      🥚 Layer Production Mash
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Compound Name</label>
                   <input
@@ -238,9 +293,24 @@ export default function InventoryTracker({
                     required
                     value={feedName}
                     onChange={(e) => setFeedName(e.target.value)}
-                    placeholder="e.g. Layers Premium Crumbly"
+                    placeholder="e.g. Broiler Starter Crumbles"
                     className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded"
                   />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block">Feed Class / Growth Stage</label>
+                  <CustomSelect
+                    value={feedCategory}
+                    onChange={(e) => setFeedCategory(e.target.value as any)}
+                    className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 bg-slate-50 rounded"
+                  >
+                    <option value="starter">Broiler Starter (High Protein Chick 0-2 Wks)</option>
+                    <option value="grower">Broiler Grower (Growth Phase 2-4 Wks)</option>
+                    <option value="finisher">Broiler Finisher (Bulk Weight Gain 4-7 Wks)</option>
+                    <option value="layer_mash">Layers Production Mash / Crumbles</option>
+                    <option value="other">General / Other Compound</option>
+                  </CustomSelect>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -306,7 +376,7 @@ export default function InventoryTracker({
                     type="submit"
                     className="px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold"
                   >
-                    Register
+                    Register Formula
                   </button>
                 </div>
               </form>
@@ -315,9 +385,40 @@ export default function InventoryTracker({
 
           {/* feed table views */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center whitespace-nowrap">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Feed Stock Pile Tracker</h3>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">Automatic alerts enabled</p>
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Feed Stock Pile Tracker</h3>
+                <p className="text-[10px] text-slate-400">Inventory levels and consumption monitoring</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('all')}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${
+                    feedFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  All Feeds
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('broiler')}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${
+                    feedFilter === 'broiler' ? 'bg-amber-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  🍗 Broiler Feeds
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedFilter('layer')}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-colors ${
+                    feedFilter === 'layer' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  🥚 Layer Feeds
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -325,22 +426,53 @@ export default function InventoryTracker({
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/20 text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold tracking-wider sm:tracking-widest whitespace-nowrap">
                     <th className="px-3 py-2.5 sm:px-5 sm:py-3 min-w-[140px]">Compound Name</th>
-                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 min-w-[130px]">Vendor / Dealer</th>
-                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">Cost margin (₦)</th>
+                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 min-w-[110px]">Type / Stage</th>
+                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 min-w-[120px]">Vendor / Dealer</th>
+                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">Cost (₦)</th>
                     <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-center">Alert Limit</th>
-                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">In Stockpile (Bags)</th>
+                    <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">In Stock (Bags)</th>
                     <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">Safety Status</th>
                     <th className="px-3 py-2.5 sm:px-5 sm:py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px] sm:text-xs text-slate-700">
-                  {feedStock.map(f => {
+                  {feedStock
+                    .filter(f => {
+                      if (feedFilter === 'broiler') {
+                        return f.category === 'starter' || f.category === 'grower' || f.category === 'finisher' || f.name.toLowerCase().includes('broiler') || f.name.toLowerCase().includes('starter') || f.name.toLowerCase().includes('grower') || f.name.toLowerCase().includes('finisher');
+                      }
+                      if (feedFilter === 'layer') {
+                        return f.category === 'layer_mash' || f.name.toLowerCase().includes('layer') || (!f.category && !f.name.toLowerCase().includes('broiler'));
+                      }
+                      return true;
+                    })
+                    .map(f => {
                     const sup = suppliers.find(s => s.id === f.supplierId);
                     const isLow = f.quantityBags < f.lowStockThreshold;
+                    const isBroilerFeed = f.category === 'starter' || f.category === 'grower' || f.category === 'finisher' || f.name.toLowerCase().includes('broiler');
 
                     return (
                       <tr key={f.id} className="hover:bg-slate-50/50" id={`feed_item_${f.id}`}>
                         <td className="px-3 py-3 sm:px-5 sm:py-4 font-bold text-slate-800 break-words whitespace-normal max-w-[160px]">{f.name}</td>
+                        <td className="px-3 py-3 sm:px-5 sm:py-4 whitespace-nowrap">
+                          {f.category ? (
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                              f.category === 'starter' ? 'bg-amber-100 text-amber-800' :
+                              f.category === 'grower' ? 'bg-orange-100 text-orange-800' :
+                              f.category === 'finisher' ? 'bg-rose-100 text-rose-800' :
+                              f.category === 'layer_mash' ? 'bg-emerald-100 text-emerald-800' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {f.category.replace('_', ' ')}
+                            </span>
+                          ) : (
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                              isBroilerFeed ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {isBroilerFeed ? 'Broiler' : 'Standard'}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-3 py-3 sm:px-5 sm:py-4 text-slate-500 font-medium break-words whitespace-normal max-w-[140px]">{sup ? sup.name : 'Primary Wholesaler'}</td>
                         <td className="px-3 py-3 sm:px-5 sm:py-4 text-right font-mono font-medium whitespace-nowrap">₦{f.unitCost.toFixed(2)} / bag</td>
                         <td className="px-3 py-3 sm:px-5 sm:py-4 text-center font-mono text-slate-400 whitespace-nowrap">{f.lowStockThreshold} bags</td>

@@ -50,6 +50,8 @@ const INITIAL_BATCHES = [
     dateAcquired: getD1OffsetDate(-240),
     sourceSupplierId: 'sup_1',
     ageWeeksAtAcquisition: 18,
+    flockType: 'layer',
+    breed: 'Lohmann Brown',
     status: 'active'
   },
   {
@@ -60,6 +62,23 @@ const INITIAL_BATCHES = [
     dateAcquired: getD1OffsetDate(-80),
     sourceSupplierId: 'sup_1',
     ageWeeksAtAcquisition: 16,
+    flockType: 'layer',
+    breed: 'Hy-Line Silver',
+    status: 'active'
+  },
+  {
+    id: 'batch_3_broiler',
+    name: 'Cobb 500 Broiler Flock Pen 1',
+    initialCount: 500,
+    currentCount: 494,
+    dateAcquired: getD1OffsetDate(-28),
+    sourceSupplierId: 'sup_1',
+    ageWeeksAtAcquisition: 0,
+    ageDaysAtAcquisition: 1,
+    flockType: 'broiler',
+    breed: 'Cobb 500',
+    targetWeightKg: 2.4,
+    targetAgeDays: 42,
     status: 'active'
   }
 ];
@@ -76,7 +95,11 @@ const INITIAL_DAILY_RECORDS = [
     mortalityCause: '',
     feedConsumedBags: 2.50,
     notes: 'Routine coop disinfection carried out',
-    createdBy: 'admin_user'
+    createdBy: 'admin_user',
+    feedConsumedKg: null,
+    feedTypeUsed: null,
+    avgWeightKg: null,
+    fcr: null
   },
   {
     id: 'record_today_b2',
@@ -89,13 +112,37 @@ const INITIAL_DAILY_RECORDS = [
     mortalityCause: 'Normal culling',
     feedConsumedBags: 1.80,
     notes: '',
+    createdBy: 'worker_user',
+    feedConsumedKg: null,
+    feedTypeUsed: null,
+    avgWeightKg: null,
+    fcr: null
+  },
+  {
+    id: 'record_today_b3',
+    date: getD1OffsetDate(0),
+    batchId: 'batch_3_broiler',
+    eggsCollected: 0,
+    eggsBroken: 0,
+    eggsSpoilt: 0,
+    mortalityCount: 0,
+    mortalityCause: '',
+    feedConsumedBags: 3.2,
+    feedConsumedKg: 80.0,
+    feedTypeUsed: 'Broiler Finisher Pellets (50kg)',
+    avgWeightKg: 1.96,
+    fcr: 1.48,
+    notes: 'Flock healthy and active. Growth rate tracking on target for Cobb 500.',
     createdBy: 'worker_user'
   }
 ];
 
 const INITIAL_FEED_STOCK = [
-  { id: 'feed_1', name: 'Layers Premium Mash (50kg)', quantityBags: 24.5, unitCost: 42.00, lowStockThreshold: 10, supplierId: 'sup_2' },
-  { id: 'feed_2', name: 'Growers Gold Mash (50kg)', quantityBags: 3.0, unitCost: 38.50, lowStockThreshold: 5, supplierId: 'sup_2' }
+  { id: 'feed_1', name: 'Layers Premium Mash (50kg)', category: 'layers', feedCategory: 'layers', quantityBags: 24.5, unitCost: 42.00, lowStockThreshold: 10, supplierId: 'sup_2' },
+  { id: 'feed_2', name: 'Growers Gold Mash (50kg)', category: 'grower', feedCategory: 'grower', quantityBags: 3.0, unitCost: 38.50, lowStockThreshold: 5, supplierId: 'sup_2' },
+  { id: 'feed_3', name: 'Broiler Starter Crumbles (50kg)', category: 'starter', feedCategory: 'starter', quantityBags: 18.0, unitCost: 45.00, lowStockThreshold: 8, supplierId: 'sup_2' },
+  { id: 'feed_4', name: 'Broiler Grower Pellets (50kg)', category: 'grower', feedCategory: 'grower', quantityBags: 22.5, unitCost: 43.50, lowStockThreshold: 10, supplierId: 'sup_2' },
+  { id: 'feed_5', name: 'Broiler Finisher Pellets (50kg)', category: 'finisher', feedCategory: 'finisher', quantityBags: 31.0, unitCost: 44.00, lowStockThreshold: 12, supplierId: 'sup_2' }
 ];
 
 const INITIAL_INVENTORY_ITEMS = [
@@ -137,12 +184,12 @@ async function seedDatabaseIfEmpty(db: D1Database): Promise<void> {
       db.prepare("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL)"),
       db.prepare("CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, name TEXT NOT NULL, contact TEXT)"),
       db.prepare("CREATE TABLE IF NOT EXISTS customers (id TEXT PRIMARY KEY, name TEXT NOT NULL, contact TEXT)"),
-      db.prepare("CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, name TEXT NOT NULL, initialCount INTEGER NOT NULL, currentCount INTEGER NOT NULL, dateAcquired TEXT NOT NULL, sourceSupplierId TEXT, ageWeeksAtAcquisition INTEGER NOT NULL, status TEXT NOT NULL, FOREIGN KEY (sourceSupplierId) REFERENCES suppliers(id))"),
-      db.prepare("CREATE TABLE IF NOT EXISTS dailyRecords (id TEXT PRIMARY KEY, date TEXT NOT NULL, batchId TEXT NOT NULL, eggsCollected INTEGER NOT NULL, eggsBroken INTEGER NOT NULL, eggsSpoilt INTEGER NOT NULL, mortalityCount INTEGER NOT NULL, mortalityCause TEXT, feedConsumedBags REAL NOT NULL, notes TEXT, createdBy TEXT, FOREIGN KEY (batchId) REFERENCES batches(id), FOREIGN KEY (createdBy) REFERENCES users(id))"),
-      db.prepare("CREATE TABLE IF NOT EXISTS feedStock (id TEXT PRIMARY KEY, name TEXT NOT NULL, quantityBags REAL NOT NULL, unitCost REAL NOT NULL, lowStockThreshold REAL NOT NULL, supplierId TEXT, FOREIGN KEY (supplierId) REFERENCES suppliers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS batches (id TEXT PRIMARY KEY, name TEXT NOT NULL, initialCount INTEGER NOT NULL, currentCount INTEGER NOT NULL, dateAcquired TEXT NOT NULL, sourceSupplierId TEXT, ageWeeksAtAcquisition INTEGER NOT NULL, status TEXT NOT NULL, flockType TEXT DEFAULT 'layer', breed TEXT, ageDaysAtAcquisition INTEGER, targetWeightKg REAL, targetAgeDays INTEGER, FOREIGN KEY (sourceSupplierId) REFERENCES suppliers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS dailyRecords (id TEXT PRIMARY KEY, date TEXT NOT NULL, batchId TEXT NOT NULL, eggsCollected INTEGER NOT NULL, eggsBroken INTEGER NOT NULL, eggsSpoilt INTEGER NOT NULL, mortalityCount INTEGER NOT NULL, mortalityCause TEXT, feedConsumedBags REAL NOT NULL, notes TEXT, createdBy TEXT, feedConsumedKg REAL, feedTypeUsed TEXT, avgWeightKg REAL, fcr REAL, FOREIGN KEY (batchId) REFERENCES batches(id), FOREIGN KEY (createdBy) REFERENCES users(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS feedStock (id TEXT PRIMARY KEY, name TEXT NOT NULL, quantityBags REAL NOT NULL, unitCost REAL NOT NULL, lowStockThreshold REAL NOT NULL, supplierId TEXT, category TEXT, feedCategory TEXT, FOREIGN KEY (supplierId) REFERENCES suppliers(id))"),
       db.prepare("CREATE TABLE IF NOT EXISTS inventoryItems (id TEXT PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL, unitCost REAL NOT NULL, lowStockThreshold REAL NOT NULL)"),
       db.prepare("CREATE TABLE IF NOT EXISTS expenses (id TEXT PRIMARY KEY, category TEXT NOT NULL, amount REAL NOT NULL, date TEXT NOT NULL, notes TEXT, batchId TEXT, FOREIGN KEY (batchId) REFERENCES batches(id))"),
-      db.prepare("CREATE TABLE IF NOT EXISTS income (id TEXT PRIMARY KEY, source TEXT NOT NULL, quantity REAL NOT NULL, unitPrice REAL NOT NULL, totalAmount REAL NOT NULL, date TEXT NOT NULL, customerId TEXT, paymentStatus TEXT NOT NULL, amountPaid REAL NOT NULL, FOREIGN KEY (customerId) REFERENCES customers(id))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS income (id TEXT PRIMARY KEY, source TEXT NOT NULL, quantity REAL NOT NULL, unitPrice REAL NOT NULL, totalAmount REAL NOT NULL, date TEXT NOT NULL, customerId TEXT, paymentStatus TEXT NOT NULL, amountPaid REAL NOT NULL, batchId TEXT, weightKg REAL, totalWeightKg REAL, saleUnit TEXT, FOREIGN KEY (customerId) REFERENCES customers(id), FOREIGN KEY (batchId) REFERENCES batches(id))"),
       db.prepare("CREATE TABLE IF NOT EXISTS creditPayments (id TEXT PRIMARY KEY, incomeId TEXT NOT NULL, amountPaid REAL NOT NULL, date TEXT NOT NULL, notes TEXT, FOREIGN KEY (incomeId) REFERENCES income(id))"),
       db.prepare("CREATE TABLE IF NOT EXISTS vaccinationLogs (id TEXT PRIMARY KEY, batchId TEXT NOT NULL, vaccineOrDrugName TEXT NOT NULL, dateAdministered TEXT NOT NULL, nextDueDate TEXT, dosage TEXT, notes TEXT, FOREIGN KEY (batchId) REFERENCES batches(id))")
     ];
@@ -163,16 +210,154 @@ async function seedDatabaseIfEmpty(db: D1Database): Promise<void> {
   });
   INITIAL_SUPPLIERS.forEach(s => batchStatements.push(db.prepare("INSERT INTO suppliers (id, name, contact) VALUES (?, ?, ?)") .bind(s.id, s.name, s.contact)));
   INITIAL_CUSTOMERS.forEach(c => batchStatements.push(db.prepare("INSERT INTO customers (id, name, contact) VALUES (?, ?, ?)") .bind(c.id, c.name, c.contact)));
-  INITIAL_BATCHES.forEach(b => batchStatements.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status)));
-  INITIAL_DAILY_RECORDS.forEach(r => batchStatements.push(db.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(r.id, r.date, r.batchId, r.eggsCollected, r.eggsBroken, r.eggsSpoilt, r.mortalityCount, r.mortalityCause || null, r.feedConsumedBags, r.notes, r.createdBy || null)));
-  INITIAL_FEED_STOCK.forEach(f => batchStatements.push(db.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId) VALUES (?, ?, ?, ?, ?, ?)") .bind(f.id, f.name, f.quantityBags, f.unitCost, f.lowStockThreshold, f.supplierId || null)));
+  INITIAL_BATCHES.forEach(b => batchStatements.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status, flockType, breed, ageDaysAtAcquisition, targetWeightKg, targetAgeDays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status, b.flockType || 'layer', b.breed || null, b.ageDaysAtAcquisition ?? (b.flockType === 'broiler' ? 1 : b.ageWeeksAtAcquisition * 7), b.targetWeightKg || null, b.targetAgeDays || null)));
+  INITIAL_DAILY_RECORDS.forEach(r => batchStatements.push(db.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy, feedConsumedKg, feedTypeUsed, avgWeightKg, fcr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(r.id, r.date, r.batchId, r.eggsCollected, r.eggsBroken, r.eggsSpoilt, r.mortalityCount, r.mortalityCause || null, r.feedConsumedBags, r.notes, r.createdBy || null, r.feedConsumedKg ?? null, r.feedTypeUsed || null, r.avgWeightKg ?? null, r.fcr ?? null)));
+  INITIAL_FEED_STOCK.forEach(f => batchStatements.push(db.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(f.id, f.name, f.quantityBags, f.unitCost, f.lowStockThreshold, f.supplierId || null, f.category || null, f.feedCategory || f.category || null)));
   INITIAL_INVENTORY_ITEMS.forEach(i => batchStatements.push(db.prepare("INSERT INTO inventoryItems (id, name, category, quantity, unit, unitCost, lowStockThreshold) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.name, i.category, i.quantity, i.unit, i.unitCost, i.lowStockThreshold)));
   INITIAL_EXPENSES.forEach(e => batchStatements.push(db.prepare("INSERT INTO expenses (id, category, amount, date, notes, batchId) VALUES (?, ?, ?, ?, ?, ?)") .bind(e.id, e.category, e.amount, e.date, e.notes, e.batchId || null)));
-  INITIAL_INCOME.forEach(i => batchStatements.push(db.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.source, i.quantity, i.unitPrice, i.totalAmount, i.date, i.customerId || null, i.paymentStatus, i.amountPaid)));
+  INITIAL_INCOME.forEach(i => batchStatements.push(db.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid, batchId, weightKg, totalWeightKg, saleUnit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.source, i.quantity, i.unitPrice, i.totalAmount, i.date, i.customerId || null, i.paymentStatus, i.amountPaid, null, null, null, null)));
   INITIAL_CREDIT_PAYMENTS.forEach(p => batchStatements.push(db.prepare("INSERT INTO creditPayments (id, incomeId, amountPaid, date, notes) VALUES (?, ?, ?, ?, ?)") .bind(p.id, p.incomeId, p.amountPaid, p.date, p.notes)));
   INITIAL_VACCINATION_LOGS.forEach(v => batchStatements.push(db.prepare("INSERT INTO vaccinationLogs (id, batchId, vaccineOrDrugName, dateAdministered, nextDueDate, dosage, notes) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(v.id, v.batchId, v.vaccineOrDrugName, v.dateAdministered, v.nextDueDate, v.dosage, v.notes)));
 
   await db.batch(batchStatements);
+}
+
+// Dynamic schema migration to guarantee D1 SQLite tables match latest features
+async function migrateDatabaseSchema(db: D1Database): Promise<void> {
+  // 1. Batches table
+  try {
+    const batchesCols = await db.prepare("PRAGMA table_info(batches)").all<any>();
+    const colNames = (batchesCols.results || []).map((c: any) => c.name);
+    if (!colNames.includes('flockType')) {
+      await db.prepare("ALTER TABLE batches ADD COLUMN flockType TEXT DEFAULT 'layer'").run();
+    }
+    if (!colNames.includes('breed')) {
+      await db.prepare("ALTER TABLE batches ADD COLUMN breed TEXT").run();
+    }
+    if (!colNames.includes('ageDaysAtAcquisition')) {
+      await db.prepare("ALTER TABLE batches ADD COLUMN ageDaysAtAcquisition INTEGER").run();
+    }
+    if (!colNames.includes('targetWeightKg')) {
+      await db.prepare("ALTER TABLE batches ADD COLUMN targetWeightKg REAL").run();
+    }
+    if (!colNames.includes('targetAgeDays')) {
+      await db.prepare("ALTER TABLE batches ADD COLUMN targetAgeDays INTEGER").run();
+    }
+  } catch (e) {
+    console.error("Notice: batches table migration skipped or pending:", e);
+  }
+
+  // 2. DailyRecords table
+  try {
+    const drCols = await db.prepare("PRAGMA table_info(dailyRecords)").all<any>();
+    const colNames = (drCols.results || []).map((c: any) => c.name);
+    if (!colNames.includes('feedConsumedKg')) {
+      await db.prepare("ALTER TABLE dailyRecords ADD COLUMN feedConsumedKg REAL").run();
+    }
+    if (!colNames.includes('feedTypeUsed')) {
+      await db.prepare("ALTER TABLE dailyRecords ADD COLUMN feedTypeUsed TEXT").run();
+    }
+    if (!colNames.includes('avgWeightKg')) {
+      await db.prepare("ALTER TABLE dailyRecords ADD COLUMN avgWeightKg REAL").run();
+    }
+    if (!colNames.includes('fcr')) {
+      await db.prepare("ALTER TABLE dailyRecords ADD COLUMN fcr REAL").run();
+    }
+  } catch (e) {
+    console.error("Notice: dailyRecords table migration skipped or pending:", e);
+  }
+
+  // 3. FeedStock table
+  try {
+    const fsCols = await db.prepare("PRAGMA table_info(feedStock)").all<any>();
+    const colNames = (fsCols.results || []).map((c: any) => c.name);
+    if (!colNames.includes('category')) {
+      await db.prepare("ALTER TABLE feedStock ADD COLUMN category TEXT").run();
+    }
+    if (!colNames.includes('feedCategory')) {
+      await db.prepare("ALTER TABLE feedStock ADD COLUMN feedCategory TEXT").run();
+    }
+  } catch (e) {
+    console.error("Notice: feedStock table migration skipped or pending:", e);
+  }
+
+  // 4. Income table
+  try {
+    const incCols = await db.prepare("PRAGMA table_info(income)").all<any>();
+    const colNames = (incCols.results || []).map((c: any) => c.name);
+    if (!colNames.includes('batchId')) {
+      await db.prepare("ALTER TABLE income ADD COLUMN batchId TEXT").run();
+    }
+    if (!colNames.includes('weightKg')) {
+      await db.prepare("ALTER TABLE income ADD COLUMN weightKg REAL").run();
+    }
+    if (!colNames.includes('totalWeightKg')) {
+      await db.prepare("ALTER TABLE income ADD COLUMN totalWeightKg REAL").run();
+    }
+    if (!colNames.includes('saleUnit')) {
+      await db.prepare("ALTER TABLE income ADD COLUMN saleUnit TEXT").run();
+    }
+  } catch (e) {
+    console.error("Notice: income table migration skipped or pending:", e);
+  }
+}
+
+// Automatically ensure broiler batch exists in D1 so user's D1 instantly has broiler data
+async function ensureBroilerBatchExists(db: D1Database): Promise<void> {
+  try {
+    const existing = await db.prepare("SELECT id FROM batches WHERE id = 'batch_3_broiler'").first<any>();
+    if (!existing) {
+      console.log("Seeding test broiler batch to D1 database...");
+      await db.prepare(`INSERT OR REPLACE INTO batches (
+        id, name, initialCount, currentCount, dateAcquired, sourceSupplierId,
+        ageWeeksAtAcquisition, status, flockType, breed, ageDaysAtAcquisition,
+        targetWeightKg, targetAgeDays
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        'batch_3_broiler',
+        'Cobb 500 Broiler Flock Pen 1',
+        500,
+        494,
+        getD1OffsetDate(-28),
+        'sup_1',
+        0,
+        'active',
+        'broiler',
+        'Cobb 500',
+        1,
+        2.4,
+        42
+      ).run();
+
+      await db.prepare(`INSERT OR REPLACE INTO dailyRecords (
+        id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt,
+        mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy,
+        feedConsumedKg, feedTypeUsed, avgWeightKg, fcr
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        'record_today_b3',
+        getD1OffsetDate(0),
+        'batch_3_broiler',
+        0, 0, 0, 0, null, 3.2,
+        'Flock healthy and active. Growth rate tracking on target for Cobb 500.',
+        'worker_user',
+        80.0,
+        'Broiler Finisher Pellets (50kg)',
+        1.96,
+        1.48
+      ).run();
+
+      await db.prepare(`INSERT OR REPLACE INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        'feed_3', 'Broiler Starter Crumbles (50kg)', 18.0, 45.0, 8.0, 'sup_2', 'starter', 'starter'
+      ).run();
+      await db.prepare(`INSERT OR REPLACE INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        'feed_4', 'Broiler Grower Pellets (50kg)', 22.5, 43.5, 10.0, 'sup_2', 'grower', 'grower'
+      ).run();
+      await db.prepare(`INSERT OR REPLACE INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        'feed_5', 'Broiler Finisher Pellets (50kg)', 31.0, 44.0, 12.0, 'sup_2', 'finisher', 'finisher'
+      ).run();
+    }
+  } catch (err) {
+    console.error("Notice: ensuring broiler batch failed:", err);
+  }
 }
 
 function isBCryptHash(str: string): boolean {
@@ -183,6 +368,8 @@ function isBCryptHash(str: string): boolean {
 app.use('*', async (c, next) => {
   const db = c.env.DB;
   await seedDatabaseIfEmpty(db);
+  await migrateDatabaseSchema(db);
+  await ensureBroilerBatchExists(db);
 
   // Migrate any existing plaintext passwords in D1
   try {
@@ -300,12 +487,12 @@ app.post('/api/sync', async (c) => {
 
   data.suppliers?.forEach((s: any) => batchOps.push(db.prepare("INSERT INTO suppliers (id, name, contact) VALUES (?, ?, ?)") .bind(s.id, s.name, s.contact)));
   data.customers?.forEach((cust: any) => batchOps.push(db.prepare("INSERT INTO customers (id, name, contact) VALUES (?, ?, ?)") .bind(cust.id, cust.name, cust.contact)));
-  data.batches?.forEach((b: any) => batchOps.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status)));
-  data.dailyRecords?.forEach((r: any) => batchOps.push(db.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(r.id, r.date, r.batchId, r.eggsCollected, r.eggsBroken, r.eggsSpoilt, r.mortalityCount, r.mortalityCause || null, r.feedConsumedBags, r.notes, r.createdBy || null)));
-  data.feedStock?.forEach((f: any) => batchOps.push(db.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId) VALUES (?, ?, ?, ?, ?, ?)") .bind(f.id, f.name, f.quantityBags, f.unitCost, f.lowStockThreshold, f.supplierId || null)));
+  data.batches?.forEach((b: any) => batchOps.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status, flockType, breed, ageDaysAtAcquisition, targetWeightKg, targetAgeDays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status, b.flockType || 'layer', b.breed || null, b.ageDaysAtAcquisition ?? (b.flockType === 'broiler' ? 1 : b.ageWeeksAtAcquisition * 7), b.targetWeightKg || null, b.targetAgeDays || null)));
+  data.dailyRecords?.forEach((r: any) => batchOps.push(db.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy, feedConsumedKg, feedTypeUsed, avgWeightKg, fcr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(r.id, r.date, r.batchId, r.eggsCollected, r.eggsBroken, r.eggsSpoilt, r.mortalityCount, r.mortalityCause || null, r.feedConsumedBags, r.notes, r.createdBy || null, r.feedConsumedKg ?? null, r.feedTypeUsed || null, r.avgWeightKg ?? null, r.fcr ?? null)));
+  data.feedStock?.forEach((f: any) => batchOps.push(db.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(f.id, f.name, f.quantityBags, f.unitCost, f.lowStockThreshold, f.supplierId || null, f.category || null, f.feedCategory || f.category || null)));
   data.inventoryItems?.forEach((i: any) => batchOps.push(db.prepare("INSERT INTO inventoryItems (id, name, category, quantity, unit, unitCost, lowStockThreshold) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.name, i.category, i.quantity, i.unit, i.unitCost, i.lowStockThreshold)));
   data.expenses?.forEach((e: any) => batchOps.push(db.prepare("INSERT INTO expenses (id, category, amount, date, notes, batchId) VALUES (?, ?, ?, ?, ?, ?)") .bind(e.id, e.category, e.amount, e.date, e.notes, e.batchId || null)));
-  data.income?.forEach((inc: any) => batchOps.push(db.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(inc.id, inc.source, inc.quantity, inc.unitPrice, inc.totalAmount, inc.date, inc.customerId || null, inc.paymentStatus, inc.amountPaid)));
+  data.income?.forEach((inc: any) => batchOps.push(db.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid, batchId, weightKg, totalWeightKg, saleUnit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(inc.id, inc.source, inc.quantity, inc.unitPrice, inc.totalAmount, inc.date, inc.customerId || null, inc.paymentStatus, inc.amountPaid, inc.batchId || null, inc.weightKg ?? null, inc.totalWeightKg ?? null, inc.saleUnit || null)));
   data.creditPayments?.forEach((p: any) => batchOps.push(db.prepare("INSERT INTO creditPayments (id, incomeId, amountPaid, date, notes) VALUES (?, ?, ?, ?, ?)") .bind(p.id, p.incomeId, p.amountPaid, p.date, p.notes)));
   data.vaccinationLogs?.forEach((v: any) => batchOps.push(db.prepare("INSERT INTO vaccinationLogs (id, batchId, vaccineOrDrugName, dateAdministered, nextDueDate, dosage, notes) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(v.id, v.batchId, v.vaccineOrDrugName, v.dateAdministered, v.nextDueDate, v.dosage, v.notes)));
 
@@ -328,8 +515,35 @@ app.post('/api/reset', async (c) => {
     db.prepare("DELETE FROM suppliers"),
     db.prepare("DELETE FROM inventoryItems"),
   ]);
-  await seedDatabaseIfEmpty(db);
-  return c.json({ status: 'success', message: 'D1 SQL Tables reset to seed values.' });
+
+  // Reseed all standard tables with fresh layer and broiler data
+  const reseedStatements: D1PreparedStatement[] = [];
+  INITIAL_SUPPLIERS.forEach(s => reseedStatements.push(db.prepare("INSERT INTO suppliers (id, name, contact) VALUES (?, ?, ?)") .bind(s.id, s.name, s.contact)));
+  INITIAL_CUSTOMERS.forEach(c => reseedStatements.push(db.prepare("INSERT INTO customers (id, name, contact) VALUES (?, ?, ?)") .bind(c.id, c.name, c.contact)));
+  INITIAL_BATCHES.forEach(b => reseedStatements.push(db.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status, flockType, breed, ageDaysAtAcquisition, targetWeightKg, targetAgeDays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(b.id, b.name, b.initialCount, b.currentCount, b.dateAcquired, b.sourceSupplierId || null, b.ageWeeksAtAcquisition, b.status, b.flockType || 'layer', b.breed || null, b.ageDaysAtAcquisition ?? (b.flockType === 'broiler' ? 1 : b.ageWeeksAtAcquisition * 7), b.targetWeightKg || null, b.targetAgeDays || null)));
+  INITIAL_DAILY_RECORDS.forEach(r => reseedStatements.push(db.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy, feedConsumedKg, feedTypeUsed, avgWeightKg, fcr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(r.id, r.date, r.batchId, r.eggsCollected, r.eggsBroken, r.eggsSpoilt, r.mortalityCount, r.mortalityCause || null, r.feedConsumedBags, r.notes, r.createdBy || null, r.feedConsumedKg ?? null, r.feedTypeUsed || null, r.avgWeightKg ?? null, r.fcr ?? null)));
+  INITIAL_FEED_STOCK.forEach(f => reseedStatements.push(db.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") .bind(f.id, f.name, f.quantityBags, f.unitCost, f.lowStockThreshold, f.supplierId || null, f.category || null, f.feedCategory || f.category || null)));
+  INITIAL_INVENTORY_ITEMS.forEach(i => reseedStatements.push(db.prepare("INSERT INTO inventoryItems (id, name, category, quantity, unit, unitCost, lowStockThreshold) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.name, i.category, i.quantity, i.unit, i.unitCost, i.lowStockThreshold)));
+  INITIAL_EXPENSES.forEach(e => reseedStatements.push(db.prepare("INSERT INTO expenses (id, category, amount, date, notes, batchId) VALUES (?, ?, ?, ?, ?, ?)") .bind(e.id, e.category, e.amount, e.date, e.notes, e.batchId || null)));
+  INITIAL_INCOME.forEach(i => reseedStatements.push(db.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid, batchId, weightKg, totalWeightKg, saleUnit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") .bind(i.id, i.source, i.quantity, i.unitPrice, i.totalAmount, i.date, i.customerId || null, i.paymentStatus, i.amountPaid, null, null, null, null)));
+  INITIAL_CREDIT_PAYMENTS.forEach(p => reseedStatements.push(db.prepare("INSERT INTO creditPayments (id, incomeId, amountPaid, date, notes) VALUES (?, ?, ?, ?, ?)") .bind(p.id, p.incomeId, p.amountPaid, p.date, p.notes)));
+  INITIAL_VACCINATION_LOGS.forEach(v => reseedStatements.push(db.prepare("INSERT INTO vaccinationLogs (id, batchId, vaccineOrDrugName, dateAdministered, nextDueDate, dosage, notes) VALUES (?, ?, ?, ?, ?, ?, ?)") .bind(v.id, v.batchId, v.vaccineOrDrugName, v.dateAdministered, v.nextDueDate, v.dosage, v.notes)));
+  await db.batch(reseedStatements);
+
+  const resetData = {
+    batches: INITIAL_BATCHES,
+    dailyRecords: INITIAL_DAILY_RECORDS,
+    feedStock: INITIAL_FEED_STOCK,
+    inventoryItems: INITIAL_INVENTORY_ITEMS,
+    expenses: INITIAL_EXPENSES,
+    income: INITIAL_INCOME,
+    customers: INITIAL_CUSTOMERS,
+    suppliers: INITIAL_SUPPLIERS,
+    creditPayments: INITIAL_CREDIT_PAYMENTS,
+    vaccinationLogs: INITIAL_VACCINATION_LOGS
+  };
+
+  return c.json({ status: 'success', message: 'D1 SQL Tables reset to seed values.', data: resetData });
 });
 
 app.post('/api/wipe', async (c) => {
@@ -562,8 +776,8 @@ app.get('/api/batches', async (c) => {
 });
 app.post('/api/batches', async (c) => {
   const body = await c.req.json() as any;
-  await c.env.DB.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-    .bind(body.id, body.name, body.initialCount, body.currentCount, body.dateAcquired, body.sourceSupplierId || null, body.ageWeeksAtAcquisition, body.status)
+  await c.env.DB.prepare("INSERT INTO batches (id, name, initialCount, currentCount, dateAcquired, sourceSupplierId, ageWeeksAtAcquisition, status, flockType, breed, ageDaysAtAcquisition, targetWeightKg, targetAgeDays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(body.id, body.name, body.initialCount, body.currentCount, body.dateAcquired, body.sourceSupplierId || null, body.ageWeeksAtAcquisition, body.status, body.flockType || 'layer', body.breed || null, body.ageDaysAtAcquisition ?? (body.flockType === 'broiler' ? 1 : body.ageWeeksAtAcquisition * 7), body.targetWeightKg || null, body.targetAgeDays || null)
     .run();
   return c.json({ status: 'success', data: body });
 });
@@ -579,8 +793,8 @@ app.get('/api/dailyRecords', async (c) => {
 });
 app.post('/api/dailyRecords', async (c) => {
   const body = await c.req.json() as any;
-  await c.env.DB.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    .bind(body.id, body.date, body.batchId, body.eggsCollected, body.eggsBroken, body.eggsSpoilt, body.mortalityCount, body.mortalityCause || null, body.feedConsumedBags, body.notes, body.createdBy || null)
+  await c.env.DB.prepare("INSERT INTO dailyRecords (id, date, batchId, eggsCollected, eggsBroken, eggsSpoilt, mortalityCount, mortalityCause, feedConsumedBags, notes, createdBy, feedConsumedKg, feedTypeUsed, avgWeightKg, fcr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(body.id, body.date, body.batchId, body.eggsCollected, body.eggsBroken, body.eggsSpoilt, body.mortalityCount, body.mortalityCause || null, body.feedConsumedBags, body.notes, body.createdBy || null, body.feedConsumedKg ?? null, body.feedTypeUsed || null, body.avgWeightKg ?? null, body.fcr ?? null)
     .run();
   return c.json({ status: 'success', data: body });
 });
@@ -589,6 +803,13 @@ app.post('/api/dailyRecords', async (c) => {
 app.get('/api/feedStock', async (c) => {
   const result = await c.env.DB.prepare("SELECT * FROM feedStock").all();
   return c.json(result.results);
+});
+app.post('/api/feedStock', async (c) => {
+  const body = await c.req.json() as any;
+  await c.env.DB.prepare("INSERT INTO feedStock (id, name, quantityBags, unitCost, lowStockThreshold, supplierId, category, feedCategory) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(body.id, body.name, body.quantityBags, body.unitCost, body.lowStockThreshold, body.supplierId || null, body.category || null, body.feedCategory || body.category || null)
+    .run();
+  return c.json({ status: 'success', data: body });
 });
 
 // 4. Expenses API
@@ -611,8 +832,8 @@ app.get('/api/income', async (c) => {
 });
 app.post('/api/income', async (c) => {
   const body = await c.req.json() as any;
-  await c.env.DB.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    .bind(body.id, body.source, body.quantity, body.unitPrice, body.totalAmount, body.date, body.customerId || null, body.paymentStatus, body.amountPaid)
+  await c.env.DB.prepare("INSERT INTO income (id, source, quantity, unitPrice, totalAmount, date, customerId, paymentStatus, amountPaid, batchId, weightKg, totalWeightKg, saleUnit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(body.id, body.source, body.quantity, body.unitPrice, body.totalAmount, body.date, body.customerId || null, body.paymentStatus, body.amountPaid, body.batchId || null, body.weightKg ?? null, body.totalWeightKg ?? null, body.saleUnit || null)
     .run();
   return c.json({ status: 'success', data: body });
 });

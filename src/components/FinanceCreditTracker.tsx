@@ -4,9 +4,10 @@
  */
 
 import React, { useState } from 'react';
-import { DollarSign, PlusCircle, ArrowUpRight, ArrowDownRight, Users, Check, AlertCircle, ShieldAlert } from 'lucide-react';
-import { Expense, Income, Customer, Supplier, CreditPayment, User } from '../types';
+import { DollarSign, PlusCircle, ArrowUpRight, ArrowDownRight, Users, Check, AlertCircle, ShieldAlert, Scale, Egg } from 'lucide-react';
+import { Expense, Income, Customer, Supplier, CreditPayment, User, Batch } from '../types';
 import CustomSelect from './CustomSelect';
+import { getLocalDateString } from '../utils/date';
 
 interface FinanceCreditTrackerProps {
   expenses: Expense[];
@@ -15,6 +16,7 @@ interface FinanceCreditTrackerProps {
   suppliers: Supplier[];
   creditPayments: CreditPayment[];
   user: User | null;
+  batches?: Batch[];
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onAddIncome: (income: Omit<Income, 'id'>) => void;
   onAddCreditPayment: (payment: Omit<CreditPayment, 'id'>) => void;
@@ -31,6 +33,7 @@ export default function FinanceCreditTracker({
   suppliers,
   creditPayments,
   user,
+  batches = [],
   onAddExpense,
   onAddIncome,
   onAddCreditPayment,
@@ -44,10 +47,13 @@ export default function FinanceCreditTracker({
 
   // Addition states for Income
   const [showIncomeForm, setShowIncomeForm] = useState(false);
-  const [incSource, setIncSource] = useState<'egg_sales' | 'bird_sales' | 'manure_sales' | 'other'>('egg_sales');
+  const [incSource, setIncSource] = useState<'egg_sales' | 'broiler_meat_sales' | 'bird_sales' | 'manure_sales' | 'other'>('egg_sales');
+  const [incSaleUnit, setIncSaleUnit] = useState<'per_crate' | 'per_kg' | 'per_bird'>('per_crate');
   const [incQty, setIncQty] = useState<number>(0);
+  const [incTotalWeightKg, setIncTotalWeightKg] = useState<number>(0);
+  const [incBatchId, setIncBatchId] = useState<string>('');
   const [incPrice, setIncPrice] = useState<number>(0);
-  const [incDate, setIncDate] = useState(new Date().toISOString().split('T')[0]);
+  const [incDate, setIncDate] = useState(getLocalDateString());
   const [incCustId, setIncCustId] = useState('');
   const [incStatus, setIncStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
   const [incPaidAmount, setIncPaidAmount] = useState<number>(0);
@@ -61,7 +67,7 @@ export default function FinanceCreditTracker({
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expCategory, setExpCategory] = useState<'feed' | 'medication' | 'transport' | 'labor' | 'miscellaneous'>('feed');
   const [expAmount, setExpAmount] = useState<number>(0);
-  const [expDate, setExpDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expDate, setExpDate] = useState(getLocalDateString());
   const [expNotes, setExpNotes] = useState('');
   const [expSupplierId, setExpSupplierId] = useState('');
   const [expStatus, setExpStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
@@ -103,12 +109,24 @@ export default function FinanceCreditTracker({
 
   const handleCreateIncome = (e: React.FormEvent) => {
     e.preventDefault();
-    if (incQty <= 0 || incPrice <= 0) {
-      alert('Quantity and Unit Price must be positive values.');
-      return;
+    const isWeightBased = incSource === 'broiler_meat_sales' && incSaleUnit === 'per_kg';
+
+    if (isWeightBased) {
+      if (incTotalWeightKg <= 0 || incPrice <= 0) {
+        alert('Total Weight (kg) and Price per kg must be positive values.');
+        return;
+      }
+    } else {
+      if (incQty <= 0 || incPrice <= 0) {
+        alert('Quantity and Unit Price must be positive values.');
+        return;
+      }
     }
 
-    const calculatedTotal = incQty * incPrice;
+    const calculatedTotal = isWeightBased 
+      ? Number((incTotalWeightKg * incPrice).toFixed(2))
+      : Number((incQty * incPrice).toFixed(2));
+
     let actualPaid = incPaidAmount;
     if (incStatus === 'paid') {
       actualPaid = calculatedTotal;
@@ -137,9 +155,12 @@ export default function FinanceCreditTracker({
 
     onAddIncome({
       source: incSource,
-      quantity: incQty,
+      quantity: isWeightBased ? (incQty > 0 ? incQty : 1) : incQty,
       unitPrice: incPrice,
       totalAmount: calculatedTotal,
+      weightKg: isWeightBased ? incTotalWeightKg : undefined,
+      saleUnit: isWeightBased ? 'per_kg' : (incSource === 'broiler_meat_sales' ? 'per_bird' : (incSource === 'egg_sales' ? 'per_crate' : undefined)),
+      batchId: incBatchId || undefined,
       date: incDate,
       customerId: finalCustId,
       paymentStatus: incStatus,
@@ -149,7 +170,9 @@ export default function FinanceCreditTracker({
     // Reset Form
     setShowIncomeForm(false);
     setIncQty(0);
+    setIncTotalWeightKg(0);
     setIncPrice(0);
+    setIncBatchId('');
     setIncPaidAmount(0);
     setIsCustomCust(true);
     setCustomCustName('');
@@ -216,7 +239,7 @@ export default function FinanceCreditTracker({
     onAddCreditPayment({
       incomeId: paymentIncomeId,
       amountPaid: paymentAmount,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       notes: paymentNotes
     });
 
@@ -335,8 +358,8 @@ export default function FinanceCreditTracker({
         amountPaid: newAmountPaid,
         paymentStatus: newStatus,
         notes: targetExp.notes 
-          ? `${targetExp.notes} | Paid ₦${supplierPaymentAmount} on ${new Date().toISOString().split('T')[0]}. ${supplierPaymentNotes}` 
-          : `Paid ₦${supplierPaymentAmount} on ${new Date().toISOString().split('T')[0]}. ${supplierPaymentNotes}`
+          ? `${targetExp.notes} | Paid ₦${supplierPaymentAmount} on ${getLocalDateString()}. ${supplierPaymentNotes}` 
+          : `Paid ₦${supplierPaymentAmount} on ${getLocalDateString()}. ${supplierPaymentNotes}`
       });
       alert(`Payment of ₦${supplierPaymentAmount} successfully recorded for ${targetExp.category} expense.`);
     } else {
@@ -453,7 +476,7 @@ export default function FinanceCreditTracker({
       d.remainingBalance.toFixed(2),
       d.remainingBalance <= 0 ? 'Settled' : 'Outstanding'
     ]);
-    exportToCSV(headers, rows, `Customer_Debtors_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    exportToCSV(headers, rows, `Customer_Debtors_Ledger_${getLocalDateString()}.csv`);
   };
 
   const handleExportPaymentsToCSV = () => {
@@ -468,7 +491,7 @@ export default function FinanceCreditTracker({
       d.amountPaid.toFixed(2),
       d.notes || '-'
     ]);
-    exportToCSV(headers, rows, `Customer_Payments_Received_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    exportToCSV(headers, rows, `Customer_Payments_Received_Ledger_${getLocalDateString()}.csv`);
   };
 
   const handleExportSuppliersToCSV = () => {
@@ -485,7 +508,7 @@ export default function FinanceCreditTracker({
       d.remainingBalance <= 0 ? 'Settled' : 'Outstanding',
       d.notes || '-'
     ]);
-    exportToCSV(headers, rows, `Supplier_Accounts_Payable_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    exportToCSV(headers, rows, `Supplier_Accounts_Payable_Ledger_${getLocalDateString()}.csv`);
   };
 
   return (
@@ -587,41 +610,147 @@ export default function FinanceCreditTracker({
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Source Category</label>
                   <CustomSelect
                     value={incSource}
-                    onChange={(e) => setIncSource(e.target.value as any)}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setIncSource(val);
+                      if (val === 'broiler_meat_sales') {
+                        setIncSaleUnit('per_kg');
+                      } else if (val === 'egg_sales') {
+                        setIncSaleUnit('per_crate');
+                      }
+                    }}
                     className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
                   >
-                    <option value="egg_sales">Wholesale Egg Sales</option>
-                    <option value="bird_sales">Bird Disposal Hen Sales</option>
+                    <option value="egg_sales">Wholesale Egg Sales (Crates)</option>
+                    <option value="broiler_meat_sales">Broiler Meat / Live Harvest Sales</option>
+                    <option value="bird_sales">Spent Hen / Cull Bird Sales</option>
                     <option value="manure_sales">Manure Fertilizer Sales</option>
                     <option value="other">Miscellaneous Other</option>
                   </CustomSelect>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                {/* Batch selection if batches exist */}
+                {batches.length > 0 && (
                   <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase block">Quantity Sold</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={incQty}
-                      onChange={(e) => setIncQty(Number(e.target.value))}
-                      className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded"
-                    />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block">Source Flock / Batch (Optional)</label>
+                    <CustomSelect
+                      value={incBatchId}
+                      onChange={(e) => setIncBatchId(e.target.value)}
+                      className="mt-1 w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-slate-50 rounded"
+                    >
+                      <option value="">-- No specific flock linked --</option>
+                      {batches.map(b => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.flockType === 'broiler' ? '🍗 Broiler' : '🥚 Layer'} - {b.currentCount} birds)
+                        </option>
+                      ))}
+                    </CustomSelect>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 uppercase block">Unit Price (₦)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      min="0.1"
-                      value={incPrice}
-                      onChange={(e) => setIncPrice(Number(e.target.value))}
-                      className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded"
-                    />
+                )}
+
+                {/* Broiler pricing mode selector */}
+                {incSource === 'broiler_meat_sales' && (
+                  <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg space-y-2">
+                    <label className="text-[10px] font-bold text-amber-800 uppercase block">Pricing Mechanism</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIncSaleUnit('per_kg')}
+                        className={`py-1.5 px-2 rounded text-[11px] font-bold text-center transition-colors flex items-center justify-center gap-1.5 ${
+                          incSaleUnit === 'per_kg'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 border border-amber-200'
+                        }`}
+                      >
+                        <Scale className="w-3.5 h-3.5" />
+                        <span>By Weight (₦/kg)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIncSaleUnit('per_bird')}
+                        className={`py-1.5 px-2 rounded text-[11px] font-bold text-center transition-colors flex items-center justify-center gap-1.5 ${
+                          incSaleUnit === 'per_bird'
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 border border-amber-200'
+                        }`}
+                      >
+                        <span>Per Bird Head (₦/bird)</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {incSource === 'broiler_meat_sales' && incSaleUnit === 'per_kg' ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">Total Wt (kg)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        min="0.1"
+                        value={incTotalWeightKg || ''}
+                        onChange={(e) => setIncTotalWeightKg(Number(e.target.value))}
+                        placeholder="e.g. 150"
+                        className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">Price / kg (₦)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        min="0.1"
+                        value={incPrice || ''}
+                        onChange={(e) => setIncPrice(Number(e.target.value))}
+                        placeholder="e.g. 2800"
+                        className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">Bird Count</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={incQty || ''}
+                        onChange={(e) => setIncQty(Number(e.target.value))}
+                        placeholder="Birds"
+                        className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded font-mono"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        {incSource === 'egg_sales' ? 'Crates Sold' : 'Quantity / Birds Sold'}
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        value={incQty || ''}
+                        onChange={(e) => setIncQty(Number(e.target.value))}
+                        className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                        Unit Price (₦)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        min="0.1"
+                        value={incPrice || ''}
+                        onChange={(e) => setIncPrice(Number(e.target.value))}
+                        className="mt-1 w-full text-xs px-2 py-1.5 border border-slate-200 rounded font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center justify-between">
@@ -708,7 +837,9 @@ export default function FinanceCreditTracker({
 
                 <div className="bg-slate-50 p-2 rounded text-[10px] flex justify-between font-semibold">
                   <span>Grand total calculation:</span>
-                  <span className="font-mono text-emerald-700">₦{(incQty * incPrice).toFixed(2)}</span>
+                  <span className="font-mono text-emerald-700 font-bold">
+                    ₦{(incSource === 'broiler_meat_sales' && incSaleUnit === 'per_kg' ? incTotalWeightKg * incPrice : incQty * incPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
@@ -906,9 +1037,28 @@ export default function FinanceCreditTracker({
                             </span>
                           </td>
                           <td className="px-3 py-3 sm:px-5 sm:py-3.5 font-semibold text-slate-700 break-words whitespace-normal max-w-[240px]">
-                            {isIncome ? (
+                            {item._ledgerType === 'income' ? (
                               <div>
-                                <span className="capitalize">{item.source?.replace('_', ' ')}</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="capitalize">
+                                    {item.source === 'broiler_meat_sales' ? 'Broiler Meat / Harvest' : item.source?.replace('_', ' ')}
+                                  </span>
+                                  {item.weightKg && (
+                                    <span className="inline-block px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[9px] rounded font-bold">
+                                      {item.weightKg} kg
+                                    </span>
+                                  )}
+                                  {item.batchId && (
+                                    <span className="inline-block px-1.5 py-0.2 bg-slate-150 text-slate-700 text-[9px] rounded font-medium">
+                                      {batches.find(b => b.id === item.batchId)?.name || 'Flock'}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="block text-[10px] text-slate-500 font-normal font-sans">
+                                  {item.saleUnit === 'per_kg'
+                                    ? `${item.weightKg} kg @ ₦${item.unitPrice?.toLocaleString()}/kg`
+                                    : `${item.quantity} ${item.source === 'egg_sales' ? 'crates' : 'units'} @ ₦${item.unitPrice?.toLocaleString()}`}
+                                </span>
                                 {item.customerId && (
                                   <span className="block text-[10px] text-slate-400 font-medium font-sans break-words whitespace-normal leading-normal">
                                     Buyer: {customers.find(c => c.id === item.customerId)?.name || 'Generic Buyer'}

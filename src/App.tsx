@@ -46,6 +46,7 @@ import {
   IS_PRODUCTION_PAGES,
   API_BASE
 } from './utils/api';
+import { getLocalDateString } from './utils/date';
 
 import LoginScreen from './components/LoginScreen';
 import DashboardView from './components/DashboardView';
@@ -363,7 +364,7 @@ export default function App() {
       id: `exp_${Date.now()}`,
       category: 'feed',
       amount: totalCost,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       notes: `Restocked ${addedBags} bags of ${feed.name}`
     };
 
@@ -386,7 +387,7 @@ export default function App() {
       id: `exp_${Date.now()}`,
       category: item.category === 'drugs' || item.category === 'vaccines' ? 'medication' : 'miscellaneous',
       amount: item.unitCost * addedQty,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       notes: `Restocked ${addedQty} ${item.unit} of ${item.name}`
     };
 
@@ -483,7 +484,7 @@ export default function App() {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `PoultryCare_ActiveFarmBackup_${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute('download', `PoultryCare_ActiveFarmBackup_${getLocalDateString()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
@@ -724,6 +725,18 @@ export default function App() {
               {syncDelaying && <RefreshCw className="w-3 h-3 animate-spin text-emerald-600 shrink-0" />}
             </div>
 
+            {/* Quick Refresh Data button */}
+            <button
+              id="header_refresh_btn"
+              onClick={loadFarmDatabase}
+              disabled={loading}
+              title="Refresh farm data from database"
+              className="p-1 px-2 border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-600 rounded-full transition-colors text-[10px] flex items-center gap-1 font-semibold cursor-pointer shadow-3xs"
+            >
+              <RefreshCw className={`w-3 h-3 text-slate-500 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
             {/* Notification low stock banner count if any */}
             {feedStock.some(f => f.quantityBags < f.lowStockThreshold) && (
               <div className="bg-amber-100 text-amber-800 text-[10px] px-3 py-1 rounded-full border border-amber-200 font-bold hidden sm:block">
@@ -926,6 +939,7 @@ export default function App() {
                   suppliers={suppliers}
                   creditPayments={creditPayments}
                   user={currentUser}
+                  batches={batches}
                   onAddExpense={handleAddExpense}
                   onAddIncome={handleAddIncome}
                   onAddCreditPayment={handleAddCreditPayment}
